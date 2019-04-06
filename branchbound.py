@@ -3,24 +3,42 @@ from vc_preprocessing import *
 
 def greedy_solution(g):
     solution = []
-    for e in g.es:
+    while(len(g.es) != 0):
         v = max(enumerate(g.degree(), key= lambda x: x[1])) # get v of maximum degree
         solution.append(v)
         g.delete_vertices(v)
     return solution
 
-def branch_and_bound(g, k):
-    solution = []
-    g, k, solution = apply_preprocessing(g, k , solution)
+def branch_and_reduce(g, k, solution):
+    g, k, solution = apply_preprocessing(g, k, solution)
+
+    matching_size = 0
+    matching_vs = set()
+    for e in g.es:
+        if( (not g.vs[e.target] in matching_vs ) and (not g.vs[e.source] in matching_vs) ):
+            matching_vs.add(g.vs[e.target])
+            matching_size += 1
+
+    lower_bound = matching_size
+    if(len(solution) + lower_bound >= k):
+        return
+
+def branch_and_bound(g, k, solution):
+    solution = set()
     upper_bound = g.vcount()-1
-    instances = {(g,solution)}
+    #instances = set()
+    n = tuple()
+    n = (g,solution,k)
+    print(n)
+    print(type(n))
+    instances = set(n)
     current_best_solution = []
     while(len(instances) != 0):
-        (c_graph, c_solution) = instance.pop()
+        (c_graph, c_solution, c_k) = instances.pop()
 
+        c_graph, c_k, c_solution = apply_preprocessing(g, k , solution)
         #find maximal (greedy) matching
         matching_size = 0
-        Vm = set()
         for v in c_graph.vs:
             v["matched"] = False
         for e in c_graph.es:
@@ -28,13 +46,10 @@ def branch_and_bound(g, k):
                 c_graph.vs[e.target]["matched"] = True
                 c_graph.vs[e.source]["matched"] = True
                 matching_size += 1
-                Vm.add(c_graph.vs[e.target])
-                Vm.add(c_graph.vs[e.source])
-                # #print("deleting ")
-                # #print(e)
-                # c_graph.delete_edges(e)
-                # #print(Vm)
+
         lower_bound = matching_size
+        if(lower_bound > c_k):
+            continue #this branch has no future
         
         if(lower_bound < upper_bound):
             solution_candidate = greedy_solution(c_graph)
@@ -44,25 +59,26 @@ def branch_and_bound(g, k):
                 current_best_solution = c_solution + [c_graph.vs[v]["original_index"] for v in solution_candidate]
                 print("upper bound down to " + str(len(solution_candidate)))
             if(lower_bound < upper_bound):
-                v = max(enumerate(g.degree(), key= lambda x: x[1])) # get v of maximum degree
+                v = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
                 #branch; b1 has taken v
-                b1, b2 = branch(g, v, c_solution)
+                b1, b2 = branch(g, v, c_solution, c_k)
                 instances.add(b1)
                 instances.add(b2)
     return current_best_solution
 
-def branch(g, v, solution):
+def branch(g, v, solution, k):
     i_taken = g.copy()
     s1 = copy.deepcopy(solution)
     i_not_taken = g.copy()
     s2 = copy.deepcopy(solution)
     i_taken.delete_vertices(v)
     i_not_taken.delete_vertices(v)
+    new_k = k-len(g.neighbors(v))
     i_not_taken.delete_vertices(g.neighbors(v))
     s1.append(g.vs[v]["original_index"])
     for k in g.neighbors(v):
         s2.append(g.vs[k]["original_index"])
-    return ((i_taken, s1), (i_not_taken, s2))
+    return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 
 # old branch
 # def branch(g, k, solution):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import copy, logging, sys
-from branchbound import branch
+from branchbound import branch, branch_and_bound
 from vc_preprocessing import *
 from igraph import *
 from vc_io import *
@@ -57,7 +57,7 @@ def solve_k_vertex_cover(g, param):
 
     # print("after reductions:")
     # print(g.summary() + "\nk: " + str(vc_size))
-    solution = branch(g, vc_size, solution)
+    solution = branch_and_bound(g, vc_size, solution)
     if solution != 0:
         solution = [x+1 for x in solution] # input enumerates v from 1
     return(solution)
