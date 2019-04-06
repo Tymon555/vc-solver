@@ -1,5 +1,22 @@
 #!/usr/bin/env python
 
+import crown_decomposition
+import sys
+
+def apply_preprocessing(G, k , solution):
+    #apply all preprocessing rules naively
+    old_k = k+1
+    while(old_k != k):
+        old_k = k
+        G = isolated_v_reduction(G)
+        G, k, solution= popular_v_reduction(G, k, solution)
+        if(quad_kernel_reduction(G, k) is False):
+            print("no-instance")
+            return G, (-1), solution
+        G, k, solution = pendant_v_reduction(G, k, solution)
+        G, k, solution = degree_two_reduction(G, k, solution)
+        G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution)
+    return G, k, solution
 def isolated_v_reduction(G):
     degrees = G.degree(G.vs)
     #print(G)

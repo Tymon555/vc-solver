@@ -1,6 +1,7 @@
 import copy
-
-def branch_and_bound(g, k, solution):
+from vc_preprocessing import *
+def branch(g, k, solution):
+    g, k, solution = apply_preprocessing(g, k, solution)
     ecount = g.ecount()
     vcount = g.vcount()
     #print (g)
@@ -38,4 +39,4 @@ def branch_and_bound(g, k, solution):
             #print(sol_copy)
             # to free var? to test
             # del g
-            return (branch_and_bound(i_taken, k-1, sol_copy) or branch_and_bound(i_not_taken, k-deg, solution+org_vss))
+            return (branch(i_taken, k-1, sol_copy) or branch(i_not_taken, k-deg, solution+org_vss))
