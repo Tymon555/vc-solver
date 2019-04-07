@@ -9,19 +9,29 @@ def greedy_solution(g):
         g.delete_vertices(v)
     return solution
 
-def branch_and_reduce(g, k, solution):
-    g, k, solution = apply_preprocessing(g, k, solution)
-
-    matching_size = 0
+def get_maximal_matching(g):
     matching_vs = set()
     for e in g.es:
         if( (not g.vs[e.target] in matching_vs ) and (not g.vs[e.source] in matching_vs) ):
-            matching_vs.add(g.vs[e.target])
-            matching_size += 1
+            matching_vs.add(g.vs[e.target]['original_index'])
 
-    lower_bound = matching_size
-    if(len(solution) + lower_bound >= k):
-        return
+    return matching_vs
+
+def branch_and_reduce(g, solution, current_best_solution):
+    g, k, solution = no_param_preprocessing(g, solution)
+    lower_bound = get_maximal_matching(g)
+
+    if(len(solution) + lower_bound >= len(current_best_solution)):
+        return current_best_solution
+    # if graph is empty ...
+    if(len(g.vs) == 0):
+        return (solution | lower_bound)
+    v = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
+    #branch; b1 has taken v
+    (b1, sol1,_), (b2, sol2, _) = branch(g, v, solution, k)
+    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution)
+    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution)
+    return current_best_solution
 
 def branch_and_bound(g, k, solution):
     solution = set()
@@ -76,8 +86,8 @@ def branch(g, v, solution, k):
     new_k = k-len(g.neighbors(v))
     i_not_taken.delete_vertices(g.neighbors(v))
     s1.append(g.vs[v]["original_index"])
-    for k in g.neighbors(v):
-        s2.append(g.vs[k]["original_index"])
+    for r in g.neighbors(v):
+        s2.append(g.vs[r]["original_index"])
     return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 
 # old branch

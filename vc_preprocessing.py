@@ -12,11 +12,21 @@ def apply_preprocessing(G, k , solution):
         G, k, solution= popular_v_reduction(G, k, solution)
         if(quad_kernel_reduction(G, k) is False):
             print("no-instance")
-            return G, (-1), solution
+            return G, [-2], solution
         G, k, solution = pendant_v_reduction(G, k, solution)
         G, k, solution = degree_two_reduction(G, k, solution)
         G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution)
     return G, k, solution
+
+def no_param_preprocessing(g, solution):
+    size = len(solution +1)
+    #dummy k to pass to methods originally designed to take parametrized vc
+    safe_k = len(g.vs)
+    while(size != len(solution)):
+        #w/o parameter still can use pendant and 2-degree rules
+        g, _, solution = pendant_v_reduction(g, safe_k, solution)
+        g, _, solution = degree_two_reduction(g, safe_k, solution)
+    return g, solution
 def isolated_v_reduction(G):
     degrees = G.degree(G.vs)
     #print(G)
