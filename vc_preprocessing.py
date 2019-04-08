@@ -15,14 +15,17 @@ def apply_preprocessing(G, k , solution):
             return G, [-2], solution
         G, k, solution = pendant_v_reduction(G, k, solution)
         G, k, solution = degree_two_reduction(G, k, solution)
-        G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution)
+        # only if other reductions are not doing anything
+        if(old_k == k):
+            G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution)
     return G, k, solution
 
 def no_param_preprocessing(g, solution):
-    size = len(solution +1)
+    size = len(solution ) + 1
     #dummy k to pass to methods originally designed to take parametrized vc
     safe_k = len(g.vs)
     while(size != len(solution)):
+        size = len(solution)
         #w/o parameter still can use pendant and 2-degree rules
         g, _, solution = pendant_v_reduction(g, safe_k, solution)
         g, _, solution = degree_two_reduction(g, safe_k, solution)

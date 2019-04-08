@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import copy, logging, sys
-from branchbound import branch, branch_and_bound
+from branchbound import branch, branch_and_bound, branch_and_reduce
 from vc_preprocessing import *
 from igraph import *
 from vc_io import *
 from crown_decomposition import *
+from vc_checker import *
 
 #print (igraph.__version__)
 
@@ -13,7 +14,6 @@ def solve_k_vertex_cover(g, param):
     logging.basicConfig(filename='example.log', level=logging.DEBUG)
     logging.info("this is log test.")
     #FILENAME = "samplefile.gr"
-    # FILENAME = "degree_two_test.gr"
     vc_size = param
     solution = []
     partial = []
@@ -57,19 +57,33 @@ def solve_k_vertex_cover(g, param):
 
     # print("after reductions:")
     # print(g.summary() + "\nk: " + str(vc_size))
-    solution = branch_and_bound(g, vc_size, solution)
-    if solution != 0:
-        solution = [x+1 for x in solution] # input enumerates v from 1
-    return(solution)
+    # solution = branch_and_bound(g, vc_size, solution)
+
+    # trying out different version with branch and reduce
+    g, k, solution = apply_preprocessing(g, vc_size, solution)
+    all_v = [v for v in g.vs]
+    rest_solution = branch_and_reduce(g, [], all_v)
+
+    rest_solution = [x+1 for x in rest_solution] # input enumerates v from 1
+    solution = [x+1 for x in solution] # input enumerates v from 1
+
+    if(len(solution) + len(solution) > vc_size):
+        print("not found for k:" + str(vc_size))
+    if(len(solution+rest_solution) != len(set(solution) | set(rest_solution))):
+        #elements repeat
+        print("the same vs taken in preprocessing and branch and reduce")
+    return(solution+rest_solution)
 
 if __name__ == "__main__":
 
     FILENAME = "public/vc-exact_001.gr"
+    # FILENAME = "degree_two_test.gr"
     graph = readgraph(FILENAME)
     min_k = 1000000
-    for i in range(2996, 2900, -1):
+    for i in range(3990, 2, -1):
         print("for k = " + str(i) + "... ")
         solution = solve_k_vertex_cover(copy.deepcopy(graph), i)
+        print(check_correctness(copy.deepcopy(graph), [x-1 for x in solution]))
         if solution != 0 :
             print (solution)
             min_k = i
