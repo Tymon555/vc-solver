@@ -19,13 +19,19 @@ def get_maximal_matching(g):
     return matching_vs
 
 def branch_and_reduce(g, solution, current_best_solution):
-    g, solution = no_param_preprocessing(g, solution)
+    #TODO: this adds previously added v
+    g, p_solution = no_param_preprocessing(g, solution)
+    solution = p_solution
+    print("solution after no param processing: ")
+    # print(solution)
+    print(g.summary())
     lower_bound = get_maximal_matching(g)
-    print("lwer bound: " + str(lower_bound))
+    # print("lwer bound: " + str(lower_bound))
     if(len(solution) + len(lower_bound) >= len(current_best_solution)):
+        print("new best current solution")
         return current_best_solution
     # if graph is empty ...
-    if(len(g.vs) == 0):
+    if(g.ecount() == 0):
         print("found partial size: " + str(len(set(solution) | lower_bound)))
         return (set(solution) | lower_bound)
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
@@ -33,8 +39,8 @@ def branch_and_reduce(g, solution, current_best_solution):
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
     (b1, sol1,_), (b2, sol2, _) = branch(g, v, solution, 1)
     # print("new branches: ")
-    # print(g-b1)
-    # print(g-b2)
+    print(sol1)
+    print(sol2)
     # print([item for item in sol1 if item not in solution])
     # print([item for item in sol2 if item not in solution])
     current_best_solution = branch_and_reduce(b1, sol1, current_best_solution)
@@ -85,17 +91,17 @@ def branch_and_bound(g, k, solution):
     return current_best_solution
 
 def branch(g, v, solution, k):
-    i_taken = copy.deepcopy(g)
+    i_taken = copy.deepcopy(g)#g.copy()
     s1 = copy.deepcopy(solution)
-    i_not_taken = copy.deepcopy(g)
+    i_not_taken = copy.deepcopy(g)#g.copy()
     s2 = copy.deepcopy(solution)
+    s1.append(g.vs[v]["original_index"])
+    for r in g.neighbors(v):
+        s2.append(g.vs[r]["original_index"])
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)
     new_k = k-len(g.neighbors(v))
     i_not_taken.delete_vertices((g.neighbors(v).append(v)))
-    s1.append(g.vs[v]["original_index"])
-    for r in g.neighbors(v):
-        s2.append(g.vs[r]["original_index"])
     return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 
 # old branch

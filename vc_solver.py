@@ -62,14 +62,16 @@ def solve_k_vertex_cover(g, param):
     # trying out different version with branch and reduce
     g, k, solution = apply_preprocessing(g, vc_size, solution)
     all_v = [v for v in g.vs]
-    print("after prepr:")
-    print(g)
+    # print("after prepr:")
+    # print(g)
 
-    rest_solution = branch_and_reduce(g, [], all_v)
+    print("branching with graph size: " + g.summary())
+    rest_solution = branch_and_reduce(g, {}, all_v)
 
-    rest_solution = [x+1 for x in rest_solution] # input enumerates v from 1
-    solution = [x+1 for x in solution] # input enumerates v from 1
-
+    rest_solution = [x for x in rest_solution] # input enumerates v from 1
+    # solution = [x+1 for x in solution] # input enumerates v from 1
+    print ("found bnb solution: ")
+    print(rest_solution)
     if(len(solution) + len(rest_solution) > vc_size):
         print("not found for k:" + str(vc_size))
         print("size of sol:" + str(len(solution+rest_solution)) + " " + str(len(solution) + len(rest_solution)))
@@ -87,9 +89,10 @@ if __name__ == "__main__":
     for i in range(3990, 2, -1):
         print("for k = " + str(i) + "... ")
         solution = solve_k_vertex_cover(copy.deepcopy(graph), i)
-        print(check_correctness(copy.deepcopy(graph), [x-1 for x in solution]))
+        # print(check_correctness(copy.deepcopy(graph), [x for x in solution]))
+        print(check_correctness(copy.deepcopy(graph), solution))
         if solution != 0 :
-            print (solution)
+            # print (solution)
             min_k = i
         else:
             print(min_k)

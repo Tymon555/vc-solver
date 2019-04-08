@@ -43,7 +43,7 @@ def isolated_v_reduction(G):
             #G.delete_vertices(i)
     #print(G)
     #print(str(isolated))
-    print(str(len(isolated)) + " isolated vertices")
+    # print(str(len(isolated)) + " isolated vertices")
     G.delete_vertices(isolated)
     #print("deleted vs: " + str(deleted))
     return G
@@ -63,7 +63,7 @@ def popular_v_reduction (G, k, solution):
     solution += partial
     k -= len(partial)
 
-    print(str(len(partial)) + " popular vertices")
+    # print(str(len(partial)) + " popular vertices")
     #print("deleted vs: " + str(deleted))
     return G, k, solution
 
@@ -85,11 +85,11 @@ def pendant_v_reduction(G, k, solution):
                 partial.append(G.vs[adj]['original_index'])
 
     #print("pendant: " + str(pendant))
-    G.delete_vertices(neighbrs)
+    G.delete_vertices(neighbrs+pendant)
     solution +=partial
     k -= len(partial)
-    if(partial):
-        print(str(len(partial)) + " pendant vertices")
+    # if(partial):
+        # print(str(len(partial)) + " pendant vertices")
     
     return G, k, solution
 
