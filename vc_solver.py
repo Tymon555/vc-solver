@@ -62,13 +62,17 @@ def solve_k_vertex_cover(g, param):
     # trying out different version with branch and reduce
     g, k, solution = apply_preprocessing(g, vc_size, solution)
     all_v = [v for v in g.vs]
+    print("after prepr:")
+    print(g)
+
     rest_solution = branch_and_reduce(g, [], all_v)
 
     rest_solution = [x+1 for x in rest_solution] # input enumerates v from 1
     solution = [x+1 for x in solution] # input enumerates v from 1
 
-    if(len(solution) + len(solution) > vc_size):
+    if(len(solution) + len(rest_solution) > vc_size):
         print("not found for k:" + str(vc_size))
+        print("size of sol:" + str(len(solution+rest_solution)) + " " + str(len(solution) + len(rest_solution)))
     if(len(solution+rest_solution) != len(set(solution) | set(rest_solution))):
         #elements repeat
         print("the same vs taken in preprocessing and branch and reduce")

@@ -88,7 +88,8 @@ def pendant_v_reduction(G, k, solution):
     G.delete_vertices(neighbrs)
     solution +=partial
     k -= len(partial)
-    print(str(len(partial)) + " pendant vertices")
+    if(partial):
+        print(str(len(partial)) + " pendant vertices")
     
     return G, k, solution
 
