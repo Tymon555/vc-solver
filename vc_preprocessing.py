@@ -24,12 +24,13 @@ def no_param_preprocessing(g, solution):
     size = len(solution ) + 1
     #dummy k to pass to methods originally designed to take parametrized vc
     safe_k = len(g.vs)
+    solution = list(solution)
     while(size != len(solution)):
         size = len(solution)
         #w/o parameter still can use pendant and 2-degree rules
         g, _, solution = pendant_v_reduction(g, safe_k, solution)
         g, _, solution = degree_two_reduction(g, safe_k, solution)
-    return g, solution
+    return g, set(solution)
 def isolated_v_reduction(G):
     degrees = G.degree(G.vs)
     #print(G)

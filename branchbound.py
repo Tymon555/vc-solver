@@ -28,7 +28,7 @@ def branch_and_reduce(g, solution, current_best_solution):
     lower_bound = get_maximal_matching(g)
     # print("lwer bound: " + str(lower_bound))
     if(len(solution) + len(lower_bound) >= len(current_best_solution)):
-        print("new best current solution")
+        print("current solution unchanged")
         return current_best_solution
     # if graph is empty ...
     if(g.ecount() == 0):
@@ -39,6 +39,9 @@ def branch_and_reduce(g, solution, current_best_solution):
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
     (b1, sol1,_), (b2, sol2, _) = branch(g, v, solution, 1)
     # print("new branches: ")
+    print(b1.summary())
+    print(b2.summary())
+
     print(sol1)
     print(sol2)
     # print([item for item in sol1 if item not in solution])
@@ -95,13 +98,13 @@ def branch(g, v, solution, k):
     s1 = copy.deepcopy(solution)
     i_not_taken = copy.deepcopy(g)#g.copy()
     s2 = copy.deepcopy(solution)
-    s1.append(g.vs[v]["original_index"])
+    s1.add(g.vs[v]["original_index"])
     for r in g.neighbors(v):
-        s2.append(g.vs[r]["original_index"])
+        s2.add(g.vs[r]["original_index"])
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)
     new_k = k-len(g.neighbors(v))
-    i_not_taken.delete_vertices((g.neighbors(v).append(v)))
+    i_not_taken.delete_vertices((g.neighbors(v)+[v]))
     return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 
 # old branch
