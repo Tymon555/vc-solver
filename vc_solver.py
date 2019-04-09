@@ -11,8 +11,6 @@ from vc_checker import *
 #print (igraph.__version__)
 
 def solve_k_vertex_cover(g, param):
-    logging.basicConfig(filename='performance.log', level=logging.DEBUG)
-    logging.info("this is log of perf_counter over each instance.")
     #FILENAME = "samplefile.gr"
     vc_size = param
     solution = []
@@ -93,6 +91,8 @@ def bin_search_k_vc(g):
     return solution
 if __name__ == "__main__":
 
+    logging.basicConfig(filename='performance.log', level=logging.DEBUG)
+    logging.info("this is log of perf_counter over each instance.")
     min_k = 1000000
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
@@ -114,6 +114,8 @@ if __name__ == "__main__":
         print(FILENAME)
         graph = readgraph(FILENAME)
         t = time.perf_counter()
+        if(graph.vcount() > 10000):
+            continue
         solution = bin_search_k_vc(copy.deepcopy(graph))
         #measure t elapsed
         elapsed = time.perf_counter() - t

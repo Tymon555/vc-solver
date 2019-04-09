@@ -23,7 +23,7 @@ def branch_and_reduce(g, solution, current_best_solution):
     g, p_solution = no_param_preprocessing(g, solution)
     solution = p_solution
     # print("solution after no param processing: ")
-    # print(solution)
+    print(" after bnb preprocessing: " + str(len(solution)))
     # print(g.summary())
     lower_bound = get_maximal_matching(g)
     # print("lwer bound: " + str(lower_bound))
