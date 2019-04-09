@@ -32,3 +32,10 @@ def readgraph(filename):
     G.add_edges(edges)
 
     return G
+
+
+def write_vc(filename, graph_size, vc):
+    with open(filename, "w+") as f:
+        f.write("s vc " + str(graph_size) + " " + str(len(vc)) + "\n")
+        for v in vc:
+            f.write(str(v) + "\n")

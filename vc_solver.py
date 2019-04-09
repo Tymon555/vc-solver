@@ -60,7 +60,7 @@ def solve_k_vertex_cover(g, param):
     # solution = branch_and_bound(g, vc_size, solution)
 
     # trying out different version with branch and reduce
-    g, k, solution = apply_preprocessing(g, vc_size, solution)
+    # g, k, solution = apply_preprocessing(g, vc_size, solution)
     all_v = [v for v in g.vs]
     # print("after prepr:")
     # print(g)
@@ -82,11 +82,11 @@ def solve_k_vertex_cover(g, param):
 
 if __name__ == "__main__":
 
-    FILENAME = "public/vc-exact_001.gr"
-    # FILENAME = "degree_two_test.gr"
+    # FILENAME = "public/vc-exact_001.gr"
+    FILENAME = "degree_two_test.gr"
     graph = readgraph(FILENAME)
     min_k = 1000000
-    for i in range(3990, 2, -1):
+    for i in range(2830, 2, -1):
         print("for k = " + str(i) + "... ")
         solution = solve_k_vertex_cover(copy.deepcopy(graph), i)
         # print(check_correctness(copy.deepcopy(graph), [x for x in solution]))
@@ -97,3 +97,5 @@ if __name__ == "__main__":
         else:
             print(min_k)
             break
+        break
+    write_vc("solution" + FILENAME, graph.vcount(), [v+1 for v in solution])
