@@ -39,3 +39,4 @@ def write_vc(filename, graph_size, vc):
         f.write("s vc " + str(graph_size) + " " + str(len(vc)) + "\n")
         for v in vc:
             f.write(str(v) + "\n")
+    return

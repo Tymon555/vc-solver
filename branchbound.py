@@ -22,13 +22,13 @@ def branch_and_reduce(g, solution, current_best_solution):
     #TODO: this adds previously added v
     g, p_solution = no_param_preprocessing(g, solution)
     solution = p_solution
-    print("solution after no param processing: ")
+    # print("solution after no param processing: ")
     # print(solution)
-    print(g.summary())
+    # print(g.summary())
     lower_bound = get_maximal_matching(g)
     # print("lwer bound: " + str(lower_bound))
     if(len(solution) + len(lower_bound) >= len(current_best_solution)):
-        print("current solution unchanged")
+        # print("current solution unchanged")
         return current_best_solution
     # if graph is empty ...
     if(g.ecount() == 0):
@@ -39,11 +39,11 @@ def branch_and_reduce(g, solution, current_best_solution):
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
     (b1, sol1,_), (b2, sol2, _) = branch(g, v, solution, 1)
     # print("new branches: ")
-    print(b1.summary())
-    print(b2.summary())
+    # print(b1.summary())
+    # print(b2.summary())
 
-    print(sol1)
-    print(sol2)
+    # print(sol1)
+    # print(sol2)
     # print([item for item in sol1 if item not in solution])
     # print([item for item in sol2 if item not in solution])
     current_best_solution = branch_and_reduce(b1, sol1, current_best_solution)
