@@ -12,7 +12,7 @@ def apply_preprocessing(G, k , solution):
         G, k, solution= popular_v_reduction(G, k, solution)
         if(quad_kernel_reduction(G, k) is False):
             print("no-instance")
-            return G, [-2], solution
+            return G, -2, solution
         G, k, solution = pendant_v_reduction(G, k, solution)
         G, k, solution = degree_two_reduction(G, k, solution)
         # only if other reductions are not doing anything
@@ -61,7 +61,7 @@ def popular_v_reduction (G, k, solution):
             #k-=1;
     #print(str(popular))
     G.delete_vertices(popular)
-    solution += partial
+    solution |= set(partial)
     k -= len(partial)
 
     # print(str(len(partial)) + " popular vertices")
@@ -87,7 +87,7 @@ def pendant_v_reduction(G, k, solution):
 
     #print("pendant: " + str(pendant))
     G.delete_vertices(neighbrs+pendant)
-    solution +=partial
+    solution |= set(partial)
     k -= len(partial)
     # if(partial):
         # print(str(len(partial)) + " pendant vertices")
@@ -126,7 +126,7 @@ def degree_two_reduction(G, k, solution):
 
     #print("added to vc: " + str(taken))
     G.delete_vertices(taken)
-    solution += partial
+    solution |= set(partial)
     k -= len(partial)
     return G, k, solution
 

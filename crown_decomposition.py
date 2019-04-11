@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import copy, logging, sys
+from queue import *
 from igraph import *
 
 def apply_crown_decomposition(G, k, solution):
@@ -16,7 +17,7 @@ def apply_crown_decomposition(G, k, solution):
         # unless check whether |V| > 3k ???
         print("ERROR IN CD")
     G.delete_vertices(crown_head)
-    solution += partial
+    solution |= set(partial)
 
     print(str(partial) + " taken to solution ")
     k -= len(partial)
@@ -39,42 +40,57 @@ def get_vc_from_matching(G, M, Vm, I):
             walk(G, v, True, Z) # unmatched, so no incident edges matching
     #print("Z: " + str(Z))
     S = (Vm-Z) | (I & Z) #Konig's theorem
-    #print("S: " + str(S))
+    print("S: " + str(S))
     return S
 
 def crown_decomposition(G, k, solution):
+
+    # requirement for crown reduction
+    if(G.vcount() > 3*k):
+        print("g has more than 3k vertices")
+        return set(), []
     #find maximal (greedy) matching
     matching_size = 0
     Vm = set()
     for v in G.vs:
         v["matched"] = False
+    to_delete = []
     for e in G.es:
+        print("for "+ str(e))
         if(G.vs[e.target]["matched"] == False and G.vs[e.source]["matched"] == False  ):
             G.vs[e.target]["matched"] = True
             G.vs[e.source]["matched"] = True
             matching_size += 1
             Vm.add(G.vs[e.target])
             Vm.add(G.vs[e.source])
-            # #print("deleting ")
-            # #print(e)
-            G.delete_edges(e)
-            # #print(Vm)
+            # print("deleting ")
+            # print(e)
+            # print(G.vs[e.target])
+            # print(G.vs[e.source])
+            to_delete.append(e)
+            print(Vm)
             #
+    G.delete_edges(to_delete)
     s = set()
     s.update(G.vs)
     I = s-Vm
     #deleting to get bipartite (Vm, I)
+    # print(G.ecount())
+    to_delete = []
     for e in G.es:
+        print( str(e.target) + " " + str(e.source))
         if(G.vs[e.target]["matched"] == True and G.vs[e.source]["matched"] == True):
-            G.delete_edges(e)
+            # print("to bipratite" + str(e.target) + " " + str(e.source))
+            to_delete.append(e)
+    G.delete_edges(to_delete)
     for v in G.vs:
         if(v in Vm and G.degree(v) == 0):
             Vm.remove(v)
-    #print("found matching of size " + str(matching_size))
-
-    #print("I: " + str(I))
-    #print("Vm: " + str(Vm))
-    #print(G)
+    print("found matching of size " + str(matching_size))
+    # print()
+    print("I: " + str(I))
+    print("Vm: " + str(Vm))
+    print(G)
     if(matching_size > k):
         #we are done
         return set(), [-1]
@@ -89,35 +105,45 @@ def crown_decomposition(G, k, solution):
     for v in G.vs:
         v["hk_matched"] = False # those
 
-
+    #TODO fix that
     augmented_paths = set()
     v_in_aug_paths = set()
+    # while True:
+    #     for v in Vm:
+    #         if v["hk_matched"] == True :
+    #             continue
+    #         bfs = G.bfs(v.index)
+    #         print(bfs)
+    #         for i, index in enumerate(bfs[0]):
+    #             parent = bfs[2][index]
+    #             print(str(index) + " " + str(parent))
+    #             if(G.vs[index]["hk_matched"] == False and \
+    #                G.vs[parent]["hk_matched"] == False and \
+    #                index not in v_in_aug_paths and \
+    #                parent not in v_in_aug_paths and \
+    #                index != parent): # is not the same v
+    #                 # #print("found v-disjoint shortest augmented path between " + str(index) + " and "+ str(parent))
+    #                 augmented_paths.add(G.get_eid(index, parent))#found v-disjoint shortest augmented path
+    #                 v_in_aug_paths.add(index)
+    #                 v_in_aug_paths.add(parent)
+
+    #     if len(augmented_paths) == 0: #empty set
+    #         break
+    #     else :
+    #         M.symmetric_difference_update(augmented_paths)
+    #         augmented_paths.clear()
+    q = Queue()
+    for v in Vm:
+        q.put(v.index)
     while True:
-        for v in Vm:
-            if v["hk_matched"] == True :
-                continue
-            bfs = G.bfs(v.index)
-            ##print(bfs)
-            for i, index in enumerate(bfs[0]):
-                parent = bfs[2][index]
-                # #print(str(index) + " " + str(parent))
-                if(G.vs[index]["hk_matched"] == False and \
-                   G.vs[parent]["hk_matched"] == False and \
-                   index not in v_in_aug_paths and \
-                   parent not in v_in_aug_paths and \
-                   index != parent): # is not the same v
-                    # #print("found v-disjoint shortest augmented path between " + str(index) + " and "+ str(parent))
-                    augmented_paths.add(G.get_eid(index, parent))#found v-disjoint shortest augmented path
-                    v_in_aug_paths.add(index)
-                    v_in_aug_paths.add(parent)
-        if len(augmented_paths) == 0: #empty set
+        G, augmented_paths, v_in_aug_paths = hk_bfs(G, q, v_in_aug_paths)
+        if not augmented_paths:
             break
-        else :
+        else:
             M.symmetric_difference_update(augmented_paths)
             augmented_paths.clear()
-
-    #print("M: ")
-    #print(str({(G.es[e].source, G.es[e].target) for e in M}))
+    print("M: ")
+    print(str({(G.es[e].source, G.es[e].target) for e in M}))
     vc = get_vc_from_matching(G, M, Vm, I)
     # #print("vs is:")
     # #print (vc)
@@ -134,3 +160,25 @@ def crown_decomposition(G, k, solution):
     #translating into original graph's stuff
     partial = [v["original_index"] for v in H]
     return H, partial
+
+def hk_bfs(G, vs, v_in_aug_paths):
+    augmented_paths = set()
+    v_in_aug_paths = set()
+    while(not vs.empty()):
+        v = vs.get()
+        ns = G.neighbors(v)
+        print(v)
+        print(ns)
+        for n in ns:
+            if(G.vs[v]["hk_matched"] == False and \
+               G.vs[n]["hk_matched"] == False and \
+               v not in v_in_aug_paths and \
+               n not in v_in_aug_paths):
+                augmented_paths.add(G.get_eid(v, n))
+                G.vs[v]["hk_matched"] = True
+                G.vs[n]["hk_matched"] = True
+                print(G.vs[n]["hk_matched"])
+                v_in_aug_paths.add(v)
+                v_in_aug_paths.add(n)
+
+    return G, augmented_paths, v_in_aug_paths

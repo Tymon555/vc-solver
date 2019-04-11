@@ -18,26 +18,33 @@ def get_maximal_matching(g):
 
     return matching_vs
 
-def branch_and_reduce(g, solution, current_best_solution):
+def branch_and_reduce(g, solution, current_best_solution, k):
     #TODO: this adds previously added v
-    g, p_solution = no_param_preprocessing(g, solution)
-    solution = p_solution
+    # g, p_solution = no_param_preprocessing(g, solution)
+    g, k, solution = apply_preprocessing(g, k, solution)
+    if(k < 0):
+        # no-instance
+        print("no-instance")
+        return current_best_solution
+    # print (solution)
     # print("solution after no param processing: ")
-    print(" after bnb preprocessing: " + str(len(solution)))
+    # print(" after bnb preprocessing: " + str(len(solution)))
     # print(g.summary())
     lower_bound = get_maximal_matching(g)
     # print("lwer bound: " + str(lower_bound))
-    if(len(solution) + len(lower_bound) >= len(current_best_solution)):
+    if(len(solution) + len(lower_bound) >= len(current_best_solution) or len(lower_bound) > k):
         # print("current solution unchanged")
         return current_best_solution
     # if graph is empty ...
+    # print(g.ecount())
     if(g.ecount() == 0):
-        print("found partial size: " + str(len(set(solution) | lower_bound)))
+        # print("found partial size: " + str(len(set(solution) | lower_bound)))
+        # print(set(solution) | lower_bound)
         return (set(solution) | lower_bound)
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
     #branch; b1 has taken v
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
-    (b1, sol1,_), (b2, sol2, _) = branch(g, v, solution, 1)
+    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, 1)
     # print("new branches: ")
     # print(b1.summary())
     # print(b2.summary())
@@ -46,8 +53,8 @@ def branch_and_reduce(g, solution, current_best_solution):
     # print(sol2)
     # print([item for item in sol1 if item not in solution])
     # print([item for item in sol2 if item not in solution])
-    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution)
-    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution)
+    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution, k1)
+    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution, k2)
     return current_best_solution
 
 def branch_and_bound(g, k, solution):

@@ -13,7 +13,7 @@ from vc_checker import *
 def solve_k_vertex_cover(g, param):
     #FILENAME = "samplefile.gr"
     vc_size = param
-    solution = []
+    solution = set()
     partial = []
 
     for v in g.vs:
@@ -57,12 +57,12 @@ def solve_k_vertex_cover(g, param):
     g, k, solution = apply_preprocessing(g, vc_size, solution) # trying out different version with branch and reduce
     print("after crown reduction preprocesses:")
     print(g.summary())
-    all_v = [v for v in g.vs]
+    all_v = [v['original_index'] for v in g.vs]
     # print("after prepr:")
     # print(g)
 
     # print("branching with graph size: " + g.summary())
-    rest_solution = branch_and_reduce(g, {}, all_v)
+    rest_solution = branch_and_reduce(g, set(), all_v, k)
 
     rest_solution = [x for x in rest_solution] # input enumerates v from 1
     # solution = [x+1 for x in solution] # input enumerates v from 1
@@ -70,11 +70,11 @@ def solve_k_vertex_cover(g, param):
     # print(rest_solution)
     if(len(solution) + len(rest_solution) > vc_size):
         print("not found for k:" + str(vc_size))
-        print("size of sol:" + str(len(solution+rest_solution)) + " " + str(len(solution) + len(rest_solution)))
-    if(len(solution+rest_solution) != len(set(solution) | set(rest_solution))):
+        print("size of sol:" + str(len(solution.union(rest_solution))) + " " + str(len(solution) + len(rest_solution)))
+    if(len(solution.union(rest_solution)) != len(set(solution) | set(rest_solution))):
         #elements repeat
         print("the same vs taken in preprocessing and branch and reduce")
-    return(solution+rest_solution)
+    return(solution.union(rest_solution))
 
 def bin_search_k_vc(g):
     lower = 0
@@ -84,8 +84,10 @@ def bin_search_k_vc(g):
         current = int((upper + lower)/2)
         print("checking for potential vc of size: " + str(current))
         solution = solve_k_vertex_cover(copy.deepcopy(graph), current)
-        if len(solution) <= current:
+        if len(solution) == current:
             found = True
+        elif len(solution) < current:
+            upper = current-1
         else:
             lower = current+1
     return solution
@@ -120,4 +122,4 @@ if __name__ == "__main__":
         #measure t elapsed
         elapsed = time.perf_counter() - t
         logging.info("%s took %s to compute", FILENAME, elapsed )
-        write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v+1 for v in solution])
+        write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])
