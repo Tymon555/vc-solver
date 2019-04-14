@@ -111,13 +111,13 @@ if __name__ == "__main__":
     files = [file for file in os.listdir("public") if file.endswith(".gr")]
     for file in sorted(files):
         FILENAME = os.path.join("public", file)
-        # FILENAME = "public/vc-exact_005.gr"
+        # FILENAME = "public/vc-exact_001.gr"
         # FILENAME = "degree_two_test.gr"
         print(FILENAME)
         graph = readgraph(FILENAME)
         t = time.perf_counter()
-        if(graph.vcount() > 10000):
-            continue
+        # if(graph.vcount() > 10000):
+        #     continue
         solution = bin_search_k_vc(copy.deepcopy(graph))
         #measure t elapsed
         elapsed = time.perf_counter() - t

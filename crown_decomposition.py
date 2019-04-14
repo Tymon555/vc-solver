@@ -56,7 +56,7 @@ def crown_decomposition(G, k, solution):
         v["matched"] = False
     to_delete = []
     for e in G.es:
-        print("for "+ str(e))
+        # print("for "+ str(e))
         if(G.vs[e.target]["matched"] == False and G.vs[e.source]["matched"] == False  ):
             G.vs[e.target]["matched"] = True
             G.vs[e.source]["matched"] = True
@@ -68,7 +68,7 @@ def crown_decomposition(G, k, solution):
             # print(G.vs[e.target])
             # print(G.vs[e.source])
             to_delete.append(e)
-            print(Vm)
+            # print(Vm)
             #
     G.delete_edges(to_delete)
     s = set()
@@ -78,7 +78,7 @@ def crown_decomposition(G, k, solution):
     # print(G.ecount())
     to_delete = []
     for e in G.es:
-        print( str(e.target) + " " + str(e.source))
+        # print( str(e.target) + " " + str(e.source))
         if(G.vs[e.target]["matched"] == True and G.vs[e.source]["matched"] == True):
             # print("to bipratite" + str(e.target) + " " + str(e.source))
             to_delete.append(e)
@@ -86,11 +86,11 @@ def crown_decomposition(G, k, solution):
     for v in G.vs:
         if(v in Vm and G.degree(v) == 0):
             Vm.remove(v)
-    print("found matching of size " + str(matching_size))
+    # print("found matching of size " + str(matching_size))
     # print()
-    print("I: " + str(I))
-    print("Vm: " + str(Vm))
-    print(G)
+    # print("I: " + str(I))
+    # print("Vm: " + str(Vm))
+    # print(G)
     if(matching_size > k):
         #we are done
         return set(), [-1]
@@ -142,8 +142,8 @@ def crown_decomposition(G, k, solution):
         else:
             M.symmetric_difference_update(augmented_paths)
             augmented_paths.clear()
-    print("M: ")
-    print(str({(G.es[e].source, G.es[e].target) for e in M}))
+    # print("M: ")
+    # print(str({(G.es[e].source, G.es[e].target) for e in M}))
     vc = get_vc_from_matching(G, M, Vm, I)
     # #print("vs is:")
     # #print (vc)
@@ -167,8 +167,8 @@ def hk_bfs(G, vs, v_in_aug_paths):
     while(not vs.empty()):
         v = vs.get()
         ns = G.neighbors(v)
-        print(v)
-        print(ns)
+        # print(v)
+        # print(ns)
         for n in ns:
             if(G.vs[v]["hk_matched"] == False and \
                G.vs[n]["hk_matched"] == False and \
@@ -177,7 +177,7 @@ def hk_bfs(G, vs, v_in_aug_paths):
                 augmented_paths.add(G.get_eid(v, n))
                 G.vs[v]["hk_matched"] = True
                 G.vs[n]["hk_matched"] = True
-                print(G.vs[n]["hk_matched"])
+                # print(G.vs[n]["hk_matched"])
                 v_in_aug_paths.add(v)
                 v_in_aug_paths.add(n)
 
