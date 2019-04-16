@@ -10,28 +10,60 @@ def greedy_solution(g):
         g.delete_vertices(v)
     return solution
 
-def get_maximal_matching(g):
+def get_maximal_matching(g, v_visited):
     matching_vs = set()
-    for e in g.es:
-        if( (not g.vs[e.target]['original_index'] in matching_vs ) and (not g.vs[e.source]['original_index'] in matching_vs) ):
+    # for e in g.es:
+        # if( (not g.vs[e.target]['original_index'] in matching_vs ) and (not g.vs[e.source]['original_index'] in matching_vs) ):
+        #     matching_vs.add(g.vs[e.target]['original_index'])
+    v_visited[0] += len(g.vs)
+    for i, e in enumerate(g.es):
+        if (not (g.vs[e.target]['original_index'] in matching_vs))  and (not (g.vs[e.source]['original_index'] in matching_vs) ):
+            #TODO does not add edges but vertices
             matching_vs.add(g.vs[e.target]['original_index'])
+    return matching_vs, v_visited
 
-    return matching_vs
 
-def branch_and_reduce(g, solution, current_best_solution, k):
+def solve_degree_two(g, v_visited):
+    print(" used degree two solver")
+    covered = set()
+    taken = set()
+    v_visited[0] += len(g.vs)
+    for v in g.vs:
+        if(not v["original_index"] in covered):
+            covered.add(v["original_index"])
+            taken.add(v["original_index"])
+            covered |= { g.vs[v]['original_index'] for v in g.neighbors(v)}
+
+    return taken
+def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
+    DEGREE_TWO_SOLVER = True
     #TODO: this adds previously added v
     # g, p_solution = no_param_preprocessing(g, solution)
-    g, k, solution = apply_preprocessing(g, k, solution)
+    # print("KKKK:" + str(k))
+    #
+    # solver for degree-two Graphs
+    if(g.vcount()):
+        v_visited[0] += len(g.vs)
+        v, degree = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
+        if(degree <= 2 and DEGREE_TWO_SOLVER):
+            return solution | solve_degree_two(copy.deepcopy(g), v_visited)
+
+    g, k, solution = apply_preprocessing(g, k, solution, v_visited)
+    print("after reductions:")
+    print("|V| = " + str(g.vcount()))
+    print("k = " + str(k))
     if(k < 0):
         # no-instance
         print("no-instance")
         return current_best_solution
-    # print (solution)
+
+
     # print("solution after no param processing: ")
     # print(" after bnb preprocessing: " + str(len(solution)))
     # print(g.summary())
-    lower_bound = get_maximal_matching(g)
+    lower_bound, v_visited = get_maximal_matching(copy.deepcopy(g), v_visited)
     # print("lwer bound: " + str(lower_bound))
+    # print(len(lower_bound))
     if(len(solution) + len(lower_bound) >= len(current_best_solution) or len(lower_bound) > k):
         # print("current solution unchanged")
         return current_best_solution
@@ -40,11 +72,11 @@ def branch_and_reduce(g, solution, current_best_solution, k):
     if(g.ecount() == 0):
         # print("found partial size: " + str(len(set(solution) | lower_bound)))
         # print(set(solution) | lower_bound)
-        return (set(solution) | lower_bound)
+        return set(solution) | lower_bound
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
     #branch; b1 has taken v
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
-    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, 1)
+    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, k)
     # print("new branches: ")
     # print(b1.summary())
     # print(b2.summary())
@@ -53,11 +85,12 @@ def branch_and_reduce(g, solution, current_best_solution, k):
     # print(sol2)
     # print([item for item in sol1 if item not in solution])
     # print([item for item in sol2 if item not in solution])
-    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution, k1)
-    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution, k2)
+    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution, k1, v_visited)
+    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution, k2, v_visited)
     return current_best_solution
 
 def branch_and_bound(g, k, solution):
+    v_visited = [2]
     solution = set()
     upper_bound = g.vcount()-1
     #instances = set()
@@ -70,7 +103,7 @@ def branch_and_bound(g, k, solution):
     while(len(instances) != 0):
         (c_graph, c_solution, c_k) = instances.pop()
 
-        c_graph, c_k, c_solution = apply_preprocessing(g, k , solution)
+        c_graph, c_k, c_solution = apply_preprocessing(g, k , solution, v_visited)
         #find maximal (greedy) matching
         matching_size = 0
         for v in c_graph.vs:
@@ -111,6 +144,9 @@ def branch(g, v, solution, k):
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)
     new_k = k-len(g.neighbors(v))
+    # print(k)
+    # print(len(g.neighbors(v)))
+    # print("new_k: " + str(new_k))
     i_not_taken.delete_vertices((g.neighbors(v)+[v]))
     return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 

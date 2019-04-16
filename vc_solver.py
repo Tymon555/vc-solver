@@ -10,7 +10,7 @@ from vc_checker import *
 
 #print (igraph.__version__)
 
-def solve_k_vertex_cover(g, param):
+def solve_k_vertex_cover(g, param, v_visited):
     #FILENAME = "samplefile.gr"
     vc_size = param
     solution = set()
@@ -54,15 +54,19 @@ def solve_k_vertex_cover(g, param):
     # print(g.summary() + "\nk: " + str(vc_size))
     # solution = branch_and_bound(g, vc_size, solution)
 
-    g, k, solution = apply_preprocessing(g, vc_size, solution) # trying out different version with branch and reduce
-    print("after crown reduction preprocesses:")
-    print(g.summary())
+    # g, k, solution = apply_preprocessing(g, vc_size, solution) # trying out different version with branch and reduce
+    # print("after crown reduction preprocesses:")
+    # print(g.summary())
+    # print("K: " + str(k))
     all_v = [v['original_index'] for v in g.vs]
-    # print("after prepr:")
     # print(g)
 
+    g, k, solution = apply_preprocessing(g, vc_size, solution, v_visited)
+    all_v = [v['original_index'] for v in g.vs]
     # print("branching with graph size: " + g.summary())
-    rest_solution = branch_and_reduce(g, set(), all_v, k)
+
+
+    rest_solution = branch_and_reduce(g, set(), all_v, k, v_visited)
 
     rest_solution = [x for x in rest_solution] # input enumerates v from 1
     # solution = [x+1 for x in solution] # input enumerates v from 1
@@ -74,23 +78,30 @@ def solve_k_vertex_cover(g, param):
     if(len(solution.union(rest_solution)) != len(set(solution) | set(rest_solution))):
         #elements repeat
         print("the same vs taken in preprocessing and branch and reduce")
-    return(solution.union(rest_solution))
+    return solution.union(rest_solution), v_visited
 
 def bin_search_k_vc(g):
     lower = 0
     upper = g.vcount()
     found = False
+    best_solution = [0]*(upper+1)
+    v_visited = [0]
     while lower <= upper and not found:
         current = int((upper + lower)/2)
         print("checking for potential vc of size: " + str(current))
-        solution = solve_k_vertex_cover(copy.deepcopy(graph), current)
+        solution, v_visited = solve_k_vertex_cover(copy.deepcopy(graph), current, v_visited)
         if len(solution) == current:
             found = True
+            print("found for "+ str(current))
+            # print(solution)
         elif len(solution) < current:
             upper = current-1
         else:
             lower = current+1
-    return solution
+            print("big")
+        if(check_correctness(copy.deepcopy(g), solution) and len(solution) < len(best_solution)):
+            best_solution = solution
+    return best_solution, v_visited
 if __name__ == "__main__":
 
     logging.basicConfig(filename='performance.log', level=logging.DEBUG)
@@ -116,10 +127,13 @@ if __name__ == "__main__":
         print(FILENAME)
         graph = readgraph(FILENAME)
         t = time.perf_counter()
-        # if(graph.vcount() > 10000):
-        #     continue
-        solution = bin_search_k_vc(copy.deepcopy(graph))
+        if(graph.vcount() > 10000):
+            continue
+        solution, vertices_visited= bin_search_k_vc(copy.deepcopy(graph))
         #measure t elapsed
         elapsed = time.perf_counter() - t
         logging.info("%s took %s to compute", FILENAME, elapsed )
+        logging.info("visited " + str(vertices_visited[0]) + " nodes")
+        print("checker check:")
+        check_correctness(graph, list(solution))
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])

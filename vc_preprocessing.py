@@ -3,21 +3,21 @@
 import crown_decomposition
 import sys
 
-def apply_preprocessing(G, k , solution):
+def apply_preprocessing(G, k , solution, v_visited):
     #apply all preprocessing rules naively
     old_k = k+1
     while(old_k != k):
         old_k = k
-        G = isolated_v_reduction(G)
-        G, k, solution= popular_v_reduction(G, k, solution)
+        G = isolated_v_reduction(G, v_visited)
+        G, k, solution= popular_v_reduction(G, k, solution, v_visited)
         if(quad_kernel_reduction(G, k) is False):
-            print("no-instance")
+            # print("no-instance")
             return G, -2, solution
-        G, k, solution = pendant_v_reduction(G, k, solution)
-        G, k, solution = degree_two_reduction(G, k, solution)
+        G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
+        G, k, solution = degree_two_reduction(G, k, solution,v_visited )
         # only if other reductions are not doing anything
         if(old_k == k):
-            G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution)
+            G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
     return G, k, solution
 
 def no_param_preprocessing(g, solution):
@@ -31,12 +31,13 @@ def no_param_preprocessing(g, solution):
         g, _, solution = pendant_v_reduction(g, safe_k, solution)
         g, _, solution = degree_two_reduction(g, safe_k, solution)
     return g, set(solution)
-def isolated_v_reduction(G):
+def isolated_v_reduction(G, v_visited):
     degrees = G.degree(G.vs)
     #print(G)
     #deleted = list(range(len(degrees)))
     isolated = []
     #print(deleted)
+    v_visited[0] += len(G.vs)
     for i, v in enumerate(degrees):
         if (v == 0):
             isolated.append(G.vs[i])
@@ -49,13 +50,16 @@ def isolated_v_reduction(G):
     #print("deleted vs: " + str(deleted))
     return G
 
-def popular_v_reduction (G, k, solution):
+def popular_v_reduction (G, k, solution, v_visited):
     degrees = G.degree(G.vs)
 
+    # print("degrees: " + str(degrees))
     popular = []
     partial = []
+    v_visited[0] += len(G.vs)
     for i, v in enumerate(degrees):
         if (v > k):
+            # print(str(v) + " " + str(k))
             popular.append(G.vs[i])
             partial.append(G.vs[i]['original_index'])
             #k-=1;
@@ -65,16 +69,17 @@ def popular_v_reduction (G, k, solution):
     k -= len(partial)
 
     # print(str(len(partial)) + " popular vertices")
-    #print("deleted vs: " + str(deleted))
+    # print("deleted vs: " + str(deleted))
     return G, k, solution
 
-def pendant_v_reduction(G, k, solution):
+def pendant_v_reduction(G, k, solution, v_visited):
     degrees = G.degree(G.vs)
 
     pendant = []
     neighbrs = []
     partial = []
 
+    v_visited[0] += len(G.vs)
     for i, d in enumerate(degrees):
         if( d == 1 ):
             adj = G.neighbors(G.vs[i])
@@ -94,12 +99,13 @@ def pendant_v_reduction(G, k, solution):
     
     return G, k, solution
 
-def degree_two_reduction(G, k, solution):
+def degree_two_reduction(G, k, solution, v_visited):
     degrees = G.degree(G.vs)
 
     taken = []
     partial = []
 
+    v_visited[0] += len(G.vs)
     for i, d in enumerate(degrees):
         if( d == 2 ):
             #print("degree2")
@@ -124,7 +130,7 @@ def degree_two_reduction(G, k, solution):
                 # print("union of neighborhoods: " + str(neighbrd))
 
 
-    #print("added to vc: " + str(taken))
+    # print("added to vc: " + str(taken))
     G.delete_vertices(taken)
     solution |= set(partial)
     k -= len(partial)
@@ -135,7 +141,7 @@ def quad_kernel_reduction(G, k):
     #then if |V|+|E| > 3k^2 we have no-instance
     V = G.vcount()
     E = G.ecount()
-    if(V+E > 3*k*k):
+    if(V > k*k+k or E > k*k):
         return False
     else:
         return True

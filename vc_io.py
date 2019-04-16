@@ -33,6 +33,8 @@ def readgraph(filename):
     for v in G.vs:
         v['original_index'] = v.index
 
+    for v in G.vs:
+        v['original_index'] = v.index
     return G
 
 
