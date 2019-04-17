@@ -16,8 +16,8 @@ def apply_preprocessing(G, k , solution, v_visited):
         G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
         G, k, solution = degree_two_reduction(G, k, solution,v_visited )
         # only if other reductions are not doing anything
-        if(old_k == k):
-            G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
+        # if(old_k == k):
+        #     G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
     return G, k, solution
 
 def no_param_preprocessing(g, solution):
@@ -81,16 +81,18 @@ def pendant_v_reduction(G, k, solution, v_visited):
 
     v_visited[0] += len(G.vs)
     for i, d in enumerate(degrees):
+        # print(str(i) + " " + str(d))
         if( d == 1 ):
             adj = G.neighbors(G.vs[i])
             adj = adj[0]
-            if(adj not in neighbrs):
+            if(G.vs[i]['original_index'] not in partial):
                 #to not add two adjacent pendant vs
+                # print(":add")
                 pendant.append(G.vs[i])
                 neighbrs.append(adj)
                 partial.append(G.vs[adj]['original_index'])
 
-    #print("pendant: " + str(pendant))
+    # print("pendant: " + str(pendant))
     G.delete_vertices(neighbrs+pendant)
     solution |= set(partial)
     k -= len(partial)

@@ -9,7 +9,7 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     c = copy.deepcopy(G)
     # crown decomp only guaranteed if |v| > 3k
     if(c.vcount() <= 3*k):
-        # print("already have a kernel")
+        print("already have a kernel")
         return c, k, solution
     crown_head, partial = crown_decomposition(c, k, solution, v_visited)
 

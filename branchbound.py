@@ -36,15 +36,17 @@ def solve_degree_two(g, v_visited):
 
     return taken
 def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
-    DEGREE_TWO_SOLVER = True
+    # DEGREE_TWO_SOLVER = True
+    DEGREE_TWO_SOLVER = False
     #TODO: this adds previously added v
     # g, p_solution = no_param_preprocessing(g, solution)
     # print("KKKK:" + str(k))
     #
     # solver for degree-two Graphs
-    if(g.vcount()):
+    if(g.vcount() and DEGREE_TWO_SOLVER):
         v_visited[0] += len(g.vs)
         v, degree = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
+        print("max degree : " + str(degree))
         if(degree <= 2 and DEGREE_TWO_SOLVER):
             return solution | solve_degree_two(copy.deepcopy(g), v_visited)
 
@@ -69,6 +71,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
         return current_best_solution
     # if graph is empty ...
     # print(g.ecount())
+    # TODO change lower bound
     if(g.ecount() == 0):
         # print("found partial size: " + str(len(set(solution) | lower_bound)))
         # print(set(solution) | lower_bound)

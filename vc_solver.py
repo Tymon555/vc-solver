@@ -7,7 +7,7 @@ from igraph import *
 from vc_io import *
 from crown_decomposition import *
 from vc_checker import *
-
+from graph_generator import *
 #print (igraph.__version__)
 
 def solve_k_vertex_cover(g, param, v_visited):
@@ -58,8 +58,6 @@ def solve_k_vertex_cover(g, param, v_visited):
     # print("after crown reduction preprocesses:")
     # print(g.summary())
     # print("K: " + str(k))
-    all_v = [v['original_index'] for v in g.vs]
-    # print(g)
 
     g, k, solution = apply_preprocessing(g, vc_size, solution, v_visited)
     all_v = [v['original_index'] for v in g.vs]
@@ -73,6 +71,8 @@ def solve_k_vertex_cover(g, param, v_visited):
     # print ("found bnb solution: ")
     # print(rest_solution)
     if(len(solution) + len(rest_solution) > vc_size):
+        print(solution)
+        print(rest_solution)
         print("not found for k:" + str(vc_size))
         print("size of sol:" + str(len(solution.union(rest_solution))) + " " + str(len(solution) + len(rest_solution)))
     if(len(solution.union(rest_solution)) != len(set(solution) | set(rest_solution))):
@@ -80,6 +80,17 @@ def solve_k_vertex_cover(g, param, v_visited):
         print("the same vs taken in preprocessing and branch and reduce")
     return solution.union(rest_solution), v_visited
 
+def linear_search_k_vc(g):
+    k = 0
+    v_visited = [0]
+    found = False
+    k=0
+    while not found:
+        solution = solve_k_vertex_cover(copy.deepcopy(graph), k, v_visited)
+        if(check_correctness(copy.deepcopy(g), solution)):
+            found = True
+        k += 1
+    return solution
 def bin_search_k_vc(g):
     lower = 0
     upper = g.vcount()
@@ -101,6 +112,19 @@ def bin_search_k_vc(g):
             print("big")
         if(check_correctness(copy.deepcopy(g), solution) and len(solution) < len(best_solution)):
             best_solution = solution
+
+    while True:
+        current -= 1
+        print("checking for smaller k: "+ str(current))
+        solution, v_visited = solve_k_vertex_cover(copy.deepcopy(graph), current, v_visited)
+        if len(solution) == current:
+            found = True
+            print("found for "+ str(current))
+        if(check_correctness(copy.deepcopy(g), solution) and len(solution) < len(best_solution)):
+            best_solution = solution
+        else:
+            break
+
     return best_solution, v_visited
 if __name__ == "__main__":
 
@@ -119,21 +143,43 @@ if __name__ == "__main__":
     #         print(min_k)
     #         break
     #     break
-    files = [file for file in os.listdir("public") if file.endswith(".gr")]
+    folder = "public"
+    if(len(sys.argv) > 1):
+        folder = sys.argv[1]
+
+    if folder == "generate":
+        graphs = generate_ER_graphs()
+        for i, graph in enumerate(graphs):
+            t = time.perf_counter()
+            # if(graph.vcount() > 10000):
+            #     continue
+            solution, vertices_visited= bin_search_k_vc(graph)
+            # solution, vertices_visited = linear_search_k_vc(copy.deepcopy(graph))
+            #measure t elapsed
+            elapsed = time.perf_counter() - t
+            logging.info("%s took %self to compute", FILENAME, elapsed )
+            logging.info("visited " + str(vertices_visited[0]) + " nodes")
+            print("checker check:")
+            draw_solution(graph, solution)
+            check_correctness(graph, list(solution))
+
+    files = [file for file in os.listdir(folder) if file.endswith(".gr") or file.endswith(".edge")]
     for file in sorted(files):
-        FILENAME = os.path.join("public", file)
+        FILENAME = os.path.join(folder, file)
         # FILENAME = "public/vc-exact_001.gr"
         # FILENAME = "degree_two_test.gr"
         print(FILENAME)
         graph = readgraph(FILENAME)
         t = time.perf_counter()
-        if(graph.vcount() > 10000):
-            continue
+        # if(graph.vcount() > 10000):
+        #     continue
         solution, vertices_visited= bin_search_k_vc(copy.deepcopy(graph))
+        # solution, vertices_visited = linear_search_k_vc(copy.deepcopy(graph))
         #measure t elapsed
         elapsed = time.perf_counter() - t
         logging.info("%s took %s to compute", FILENAME, elapsed )
         logging.info("visited " + str(vertices_visited[0]) + " nodes")
         print("checker check:")
+        draw_solution(graph, solution)
         check_correctness(graph, list(solution))
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])

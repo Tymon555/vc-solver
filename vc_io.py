@@ -23,6 +23,10 @@ def readgraph(filename):
         if(line[0].isdigit()):
             line = line.split()
             edges.append((int(line[0])-1, int(line[1])-1))
+        if(line[0] == 'e'):
+            #to accomodate for different formats
+            line = line.split()
+            edges.append((int(line[1])-1, int(line[2])-1))
     #print(str(edges))
 
     if(len(edges) != ecount):
