@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import copy, logging, sys, os, time
-from branchbound import branch, branch_and_bound, branch_and_reduce
+from branchbound import branch, branch_and_bound, branch_and_reduce, get_maximal_matching
 from vc_preprocessing import *
 from igraph import *
 from vc_io import *
@@ -16,8 +16,6 @@ def solve_k_vertex_cover(g, param, v_visited):
     solution = set()
     partial = []
 
-    for v in g.vs:
-        v['original_index'] = v.index
         #print(v.attributes())
     # old_k = vc_size+1
     # while(True):
@@ -71,8 +69,8 @@ def solve_k_vertex_cover(g, param, v_visited):
     # print ("found bnb solution: ")
     # print(rest_solution)
     if(len(solution) + len(rest_solution) > vc_size):
-        print(solution)
-        print(rest_solution)
+        # print(solution)
+        # print(rest_solution)
         print("not found for k:" + str(vc_size))
         print("size of sol:" + str(len(solution.union(rest_solution))) + " " + str(len(solution) + len(rest_solution)))
     if(len(solution.union(rest_solution)) != len(set(solution) | set(rest_solution))):
@@ -86,44 +84,51 @@ def linear_search_k_vc(g):
     found = False
     k=0
     while not found:
-        solution = solve_k_vertex_cover(copy.deepcopy(graph), k, v_visited)
-        if(check_correctness(copy.deepcopy(g), solution)):
+        solution = solve_k_vertex_cover(graph.copy(), k, v_visited)
+        if(check_correctness(g.copy(), solution)):
             found = True
         k += 1
     return solution
 def bin_search_k_vc(g):
+    for v in g.vs:
+        v['original_index'] = v.index
+    reduced_g, _, partial = apply_preprocessing(g.copy(), g.vcount(), set())
     lower = 0
-    upper = g.vcount()
+    print(summary(reduced_g))
+    lower = len(branchbound.get_maximal_matching(reduced_g)[0])
+    upper = reduced_g.vcount()
     found = False
     best_solution = [0]*(upper+1)
     v_visited = [0]
     while lower <= upper and not found:
         current = int((upper + lower)/2)
         print("checking for potential vc of size: " + str(current))
-        solution, v_visited = solve_k_vertex_cover(copy.deepcopy(graph), current, v_visited)
+        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited)
         if len(solution) == current:
             found = True
             print("found for "+ str(current))
             # print(solution)
         elif len(solution) < current:
             upper = current-1
-        else:
-            lower = current+1
-            print("big")
-        if(check_correctness(copy.deepcopy(g), solution) and len(solution) < len(best_solution)):
-            best_solution = solution
-
-    while True:
-        current -= 1
-        print("checking for smaller k: "+ str(current))
-        solution, v_visited = solve_k_vertex_cover(copy.deepcopy(graph), current, v_visited)
-        if len(solution) == current:
+            #can do that (assumed to large k)
             found = True
             print("found for "+ str(current))
-        if(check_correctness(copy.deepcopy(g), solution) and len(solution) < len(best_solution)):
-            best_solution = solution
         else:
-            break
+            lower = current+1
+        if(len(solution) < len(best_solution)):
+            best_solution = solution
+
+    best_solution |= partial
+    # while True:
+    #     print("checking for smaller k: "+ str(current))
+    #     solution, v_visited = solve_k_vertex_cover(graph.copy(), len(best_solu), v_visited)
+    #     if len(solution) == current:
+    #         found = True
+    #         print("found for "+ str(current))
+    #     if(check_correctness(g.copy(), solution) and len(solution) < len(best_solution)):
+    #         best_solution = solution
+    #     else:
+    #         break
 
     return best_solution, v_visited
 if __name__ == "__main__":
@@ -133,9 +138,9 @@ if __name__ == "__main__":
     min_k = 1000000
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
-    #     solution = solve_k_vertex_cover(copy.deepcopy(graph), i)
-    #     # print(check_correctness(copy.deepcopy(graph), [x for x in solution]))
-    #     print(check_correctness(copy.deepcopy(graph), solution))
+    #     solution = solve_k_vertex_cover(graph.copy(), i)
+    #     # print(check_correctness(graph.copy(), [x for x in solution]))
+    #     print(check_correctness(graph.copy(), solution))
     #     if solution != 0 :
     #         # print (solution)
     #         min_k = i
@@ -154,9 +159,10 @@ if __name__ == "__main__":
             # if(graph.vcount() > 10000):
             #     continue
             solution, vertices_visited= bin_search_k_vc(graph)
-            # solution, vertices_visited = linear_search_k_vc(copy.deepcopy(graph))
+            # solution, vertices_visited = linear_search_k_vc(graph.copy())
             #measure t elapsed
             elapsed = time.perf_counter() - t
+            FILENAME = "todo"
             logging.info("%s took %self to compute", FILENAME, elapsed )
             logging.info("visited " + str(vertices_visited[0]) + " nodes")
             print("checker check:")
@@ -173,13 +179,13 @@ if __name__ == "__main__":
         t = time.perf_counter()
         # if(graph.vcount() > 10000):
         #     continue
-        solution, vertices_visited= bin_search_k_vc(copy.deepcopy(graph))
-        # solution, vertices_visited = linear_search_k_vc(copy.deepcopy(graph))
+        solution, vertices_visited= bin_search_k_vc(graph.copy())
+        # solution, vertices_visited = linear_search_k_vc(graph.copy())
         #measure t elapsed
         elapsed = time.perf_counter() - t
         logging.info("%s took %s to compute", FILENAME, elapsed )
         logging.info("visited " + str(vertices_visited[0]) + " nodes")
         print("checker check:")
-        draw_solution(graph, solution)
-        check_correctness(graph, list(solution))
+        # draw_solution(graph, solution)
+        check_correctness(graph.copy(), list(solution))
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])

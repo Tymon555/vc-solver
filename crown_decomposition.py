@@ -40,7 +40,7 @@ def walk(G, v, last_path, Z):
 def get_vc_from_matching(G, M, Vm, I, v_visited):
     #TODO test it
     Z = set()
-    v_visited += 1
+    v_visited[0] += 1
     for v in Vm:
         if not v["hk_matched"]:
             walk(G, v, True, Z) # unmatched, so no incident edges matching
@@ -49,7 +49,7 @@ def get_vc_from_matching(G, M, Vm, I, v_visited):
     # print("S: " + str(S))
     return S
 
-def crown_decomposition(G, k, solution, v_visited):
+def crown_decomposition(G, k, solution, v_visited=[0]):
 
     # requirement for crown reduction
     # if(G.vcount() > 3*k):
@@ -175,25 +175,52 @@ def crown_decomposition(G, k, solution, v_visited):
     return H, partial
 
 def hk_bfs(G, vs, v_in_aug_paths, v_visited):
-    augmented_paths = set()
-    v_in_aug_paths = set()
-    while(not vs.empty()):
-        v = vs.get()
-        v_visited += 1
-        ns = G.neighbors(v)
-        # print(v)
-        # print(ns)
-        v_visited += len(ns)
-        for n in ns:
-            if(G.vs[v]["hk_matched"] == False and \
-               G.vs[n]["hk_matched"] == False and \
-               v not in v_in_aug_paths and \
-               n not in v_in_aug_paths):
-                augmented_paths.add(G.get_eid(v, n))
-                G.vs[v]["hk_matched"] = True
-                G.vs[n]["hk_matched"] = True
-                # print(G.vs[n]["hk_matched"])
-                v_in_aug_paths.add(v)
-                v_in_aug_paths.add(n)
+    layer = 0
+    for v in G.vs:
+        v["used"] = False
+    while True:
+        augmented_paths = set()
+        v_in_aug_paths = set()
+        layer += 1
+        side = list(vs.queue)
+        for v in side:
+            if G.vs[v]["hk_matched"] == False:
+                augmented_paths = hk_dfs(G, v, augmented_paths, v_in_aug_paths, v_visited, False)
+        if not augmented_paths:
+            break
+    # while(not vs.empty()):
+    #     v = vs.get()
+    #     v_visited[0] += 1
+    #     ns = G.neighbors(v)
+    #     # print(v)
+    #     # print(ns)
+    #     v_visited[0] += len(ns)
+    #     for n in ns:
+    #         if(G.vs[v]["hk_matched"] == False and \
+    #            G.vs[n]["hk_matched"] == False and \
+    #            v not in v_in_aug_paths and \
+    #            n not in v_in_aug_paths):
+    #             augmented_paths.add(G.get_eid(v, n))
+    #             G.vs[v]["hk_matched"] = True
+    #             G.vs[n]["hk_matched"] = True
+    #             # print(G.vs[n]["hk_matched"])
+    #             v_in_aug_paths.add(v)
+    #             v_in_aug_paths.add(n)
 
     return G, augmented_paths, v_in_aug_paths
+
+def hk_dfs(G, v,augmented_paths, v_in_aug_paths, v_visited, coveredFlag, path=set()):
+    v_visited[0] += 1
+    ns = G.neighbors(v)
+    for n in ns:
+        if(not G.vs[n]["used"] and \
+            G.get_eid(v, n) in augmented_paths == coveredFlag):
+            path.add(G.get_eid(v, n))
+            # if found aug path...
+            if not G.vs[n]["hk_matched"] :
+               augmented_paths.update()
+               G.vs[v]["hk_matched"] = True
+               G.vs[n]["hk_matched"] = True
+            else :
+                augmented_paths = hk_dfs(G, n, augmented_paths, v_in_aug_paths, v_visited, not coveredFlag, path)
+    return augmented_paths

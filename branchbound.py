@@ -10,7 +10,7 @@ def greedy_solution(g):
         g.delete_vertices(v)
     return solution
 
-def get_maximal_matching(g, v_visited):
+def get_maximal_matching(g, v_visited=[0]):
     matching_vs = set()
     # for e in g.es:
         # if( (not g.vs[e.target]['original_index'] in matching_vs ) and (not g.vs[e.source]['original_index'] in matching_vs) ):
@@ -51,9 +51,9 @@ def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
             return solution | solve_degree_two(copy.deepcopy(g), v_visited)
 
     g, k, solution = apply_preprocessing(g, k, solution, v_visited)
-    print("after reductions:")
-    print("|V| = " + str(g.vcount()))
-    print("k = " + str(k))
+    # print("after reductions:")
+    # print("|V| = " + str(g.vcount()))
+    # print("k = " + str(k))
     if(k < 0):
         # no-instance
         print("no-instance")

@@ -3,7 +3,7 @@
 import crown_decomposition
 import sys
 
-def apply_preprocessing(G, k , solution, v_visited):
+def apply_preprocessing(G, k , solution, v_visited=[0]):
     #apply all preprocessing rules naively
     old_k = k+1
     while(old_k != k):
