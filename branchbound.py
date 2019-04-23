@@ -35,7 +35,8 @@ def solve_degree_two(g, v_visited):
             covered |= { g.vs[v]['original_index'] for v in g.neighbors(v)}
 
     return taken
-def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
+def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
+    # TODO: add optimiaziotn part
     # DEGREE_TWO_SOLVER = True
     DEGREE_TWO_SOLVER = False
     #TODO: this adds previously added v
@@ -50,7 +51,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
         if(degree <= 2 and DEGREE_TWO_SOLVER):
             return solution | solve_degree_two(copy.deepcopy(g), v_visited)
 
-    g, k, solution = apply_preprocessing(g, k, solution, v_visited)
+    g, k, solution = apply_preprocessing(g, k, solution, args, v_visited)
     # print("after reductions:")
     # print("|V| = " + str(g.vcount()))
     # print("k = " + str(k))
@@ -88,8 +89,8 @@ def branch_and_reduce(g, solution, current_best_solution, k, v_visited):
     # print(sol2)
     # print([item for item in sol1 if item not in solution])
     # print([item for item in sol2 if item not in solution])
-    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution, k1, v_visited)
-    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution, k2, v_visited)
+    current_best_solution = branch_and_reduce(b1, sol1, current_best_solution, k1, args, v_visited)
+    current_best_solution = branch_and_reduce(b2, sol2, current_best_solution, k2, args, v_visited)
     return current_best_solution
 
 def branch_and_bound(g, k, solution):

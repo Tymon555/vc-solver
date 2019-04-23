@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import copy, logging, sys, os, time
+import copy, logging, sys, os, time, argparse
 from branchbound import branch, branch_and_bound, branch_and_reduce, get_maximal_matching
 from vc_preprocessing import *
 from igraph import *
@@ -10,7 +10,7 @@ from vc_checker import *
 from graph_generator import *
 #print (igraph.__version__)
 
-def solve_k_vertex_cover(g, param, v_visited):
+def solve_k_vertex_cover(g, param, v_visited, args):
     #FILENAME = "samplefile.gr"
     vc_size = param
     solution = set()
@@ -57,12 +57,12 @@ def solve_k_vertex_cover(g, param, v_visited):
     # print(g.summary())
     # print("K: " + str(k))
 
-    g, k, solution = apply_preprocessing(g, vc_size, solution, v_visited)
+    g, k, solution = apply_preprocessing(g, vc_size, solution, args, v_visited)
     all_v = [v['original_index'] for v in g.vs]
     # print("branching with graph size: " + g.summary())
 
 
-    rest_solution = branch_and_reduce(g, set(), all_v, k, v_visited)
+    rest_solution = branch_and_reduce(g, set(), all_v, k, args, v_visited)
 
     rest_solution = [x for x in rest_solution] # input enumerates v from 1
     # solution = [x+1 for x in solution] # input enumerates v from 1
@@ -89,21 +89,25 @@ def linear_search_k_vc(g):
             found = True
         k += 1
     return solution
-def bin_search_k_vc(g):
+def bin_search_k_vc(g, args):
     for v in g.vs:
         v['original_index'] = v.index
-    reduced_g, _, partial = apply_preprocessing(g.copy(), g.vcount(), set())
+    v_visited = [0]
+    reduced_g, _, partial = apply_preprocessing(g.copy(), g.vcount(), set(), args)
     lower = 0
+    print("initial preprocessing done:")
     print(summary(reduced_g))
     lower = len(branchbound.get_maximal_matching(reduced_g)[0])
+    if(lower > 1000):
+        return lower, v_visited
     upper = reduced_g.vcount()
     found = False
     best_solution = [0]*(upper+1)
-    v_visited = [0]
+    print("starting binary search...")
     while lower <= upper and not found:
         current = int((upper + lower)/2)
         print("checking for potential vc of size: " + str(current))
-        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited)
+        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited, args)
         if len(solution) == current:
             found = True
             print("found for "+ str(current))
@@ -133,9 +137,16 @@ def bin_search_k_vc(g):
     return best_solution, v_visited
 if __name__ == "__main__":
 
-    logging.basicConfig(filename='performance.log', level=logging.DEBUG)
-    logging.info("this is log of perf_counter over each instance.")
+    logging.basicConfig(filename='performance_measure.log', level=logging.DEBUG)
+    logging.info("\nthis is log of perf_counter over each instance.")
     min_k = 1000000
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4], help="choose optimization level: \n0 - none, \n1 - add upper\
+                        and lower bound; \n2 - add quadratic kernel, \n3 - add interleaving, \n4 - add linear kernel", \
+                        default = 4)
+    parser.add_argument("folder", help="path to problem instances")
+    args = parser.parse_args()
+    logging.info("optimization level: " + str(args.optimization))
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
     #     solution = solve_k_vertex_cover(graph.copy(), i)
@@ -149,9 +160,9 @@ if __name__ == "__main__":
     #         break
     #     break
     folder = "public"
-    if(len(sys.argv) > 1):
-        folder = sys.argv[1]
-
+    # if(len(sys.argv) > 1):
+    #     folder = sys.argv[1]
+    folder = args.folder
     if folder == "generate":
         graphs = generate_ER_graphs()
         for i, graph in enumerate(graphs):
@@ -179,13 +190,18 @@ if __name__ == "__main__":
         t = time.perf_counter()
         # if(graph.vcount() > 10000):
         #     continue
-        solution, vertices_visited= bin_search_k_vc(graph.copy())
+        solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
+        if type(solution) == int:
+            print("vc to calculate is to big (lower bound " + str(solution) + ")")
+            continue
         # solution, vertices_visited = linear_search_k_vc(graph.copy())
         #measure t elapsed
         elapsed = time.perf_counter() - t
-        logging.info("%s took %s to compute", FILENAME, elapsed )
+        # logging.info("%s took %s to compute", FILENAME, elapsed )
+        logging.info("%s %s", FILENAME, elapsed )
         logging.info("visited " + str(vertices_visited[0]) + " nodes")
         print("checker check:")
-        # draw_solution(graph, solution)
         check_correctness(graph.copy(), list(solution))
+        if("draw" in sys.argv[1:]):
+            draw_solution(graph, solution)
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])

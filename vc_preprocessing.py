@@ -3,21 +3,22 @@
 import crown_decomposition
 import sys
 
-def apply_preprocessing(G, k , solution, v_visited=[0]):
+def apply_preprocessing(G, k , solution, args, v_visited=[0]):
     #apply all preprocessing rules naively
     old_k = k+1
-    while(old_k != k):
-        old_k = k
-        G = isolated_v_reduction(G, v_visited)
-        G, k, solution= popular_v_reduction(G, k, solution, v_visited)
-        if(quad_kernel_reduction(G, k) is False):
-            # print("no-instance")
-            return G, -2, solution
-        G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
-        G, k, solution = degree_two_reduction(G, k, solution,v_visited )
-        # only if other reductions are not doing anything
-        # if(old_k == k):
-        #     G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
+    if args.optimization >= 2:
+        while(old_k != k):
+             old_k = k
+             G = isolated_v_reduction(G, v_visited)
+             G, k, solution= popular_v_reduction(G, k, solution, v_visited)
+             if(quad_kernel_reduction(G, k) is False):
+                 # print("no-instance")
+                 return G, -2, solution
+             G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
+             G, k, solution = degree_two_reduction(G, k, solution,v_visited )
+             # only if other reductions are not doing anything
+             if(old_k == k and args.optimization >= 4):
+                 G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
     return G, k, solution
 
 def no_param_preprocessing(g, solution):

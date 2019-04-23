@@ -24,6 +24,7 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     solution |= set(partial)
 
     # print(str(partial) + " taken to solution ")
+    print("crown reduction found partial of size " + str(len(partial)))
     k -= len(partial)
     # print(k)
     return G, k, solution
@@ -175,6 +176,7 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
     return H, partial
 
 def hk_bfs(G, vs, v_in_aug_paths, v_visited):
+    v_visited[0] += G.vcount()
     layer = 0
     for v in G.vs:
         v["used"] = False
