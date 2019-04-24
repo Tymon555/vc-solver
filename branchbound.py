@@ -36,10 +36,8 @@ def solve_degree_two(g, v_visited):
 
     return taken
 def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
-    # TODO: add optimiaziotn part
     # DEGREE_TWO_SOLVER = True
     DEGREE_TWO_SOLVER = False
-    #TODO: this adds previously added v
     # g, p_solution = no_param_preprocessing(g, solution)
     # print("KKKK:" + str(k))
     #
@@ -51,7 +49,9 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
         if(degree <= 2 and DEGREE_TWO_SOLVER):
             return solution | solve_degree_two(copy.deepcopy(g), v_visited)
 
-    g, k, solution = apply_preprocessing(g, k, solution, args, v_visited)
+    if(args.optimization >= 3):
+        g, k, solution = apply_preprocessing(g, k, solution, args, v_visited)
+        #TODO: localised interleaving
     # print("after reductions:")
     # print("|V| = " + str(g.vcount()))
     # print("k = " + str(k))
@@ -64,19 +64,21 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
     # print("solution after no param processing: ")
     # print(" after bnb preprocessing: " + str(len(solution)))
     # print(g.summary())
-    lower_bound, v_visited = get_maximal_matching(copy.deepcopy(g), v_visited)
-    # print("lwer bound: " + str(lower_bound))
-    # print(len(lower_bound))
-    if(len(solution) + len(lower_bound) >= len(current_best_solution) or len(lower_bound) > k):
-        # print("current solution unchanged")
-        return current_best_solution
+    if(args.optimization >= 1):
+        lower_bound, v_visited = get_maximal_matching(copy.deepcopy(g), v_visited)
+        # print("lwer bound: " + str(lower_bound))
+        # print(len(lower_bound))
+        if(len(solution) + len(lower_bound) >= len(current_best_solution) or len(lower_bound) > k):
+            # print("current solution unchanged")
+            return current_best_solution
+
     # if graph is empty ...
     # print(g.ecount())
     # TODO change lower bound
     if(g.ecount() == 0):
         # print("found partial size: " + str(len(set(solution) | lower_bound)))
         # print(set(solution) | lower_bound)
-        return set(solution) | lower_bound
+        return set(solution) #| lower_bound
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
     #branch; b1 has taken v
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))

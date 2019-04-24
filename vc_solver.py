@@ -144,9 +144,10 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4], help="choose optimization level: \n0 - none, \n1 - add upper\
                         and lower bound; \n2 - add quadratic kernel, \n3 - add interleaving, \n4 - add linear kernel", \
                         default = 4)
+    parser.add_argument("-d", "--draw", help = "draws solution using PyCairo library", action="store_true")
     parser.add_argument("folder", help="path to problem instances")
     args = parser.parse_args()
-    logging.info("optimization level: " + str(args.optimization))
+    logging.info(str("optimization level: " + str(args.optimization)))
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
     #     solution = solve_k_vertex_cover(graph.copy(), i)
@@ -202,6 +203,6 @@ if __name__ == "__main__":
         logging.info("visited " + str(vertices_visited[0]) + " nodes")
         print("checker check:")
         check_correctness(graph.copy(), list(solution))
-        if("draw" in sys.argv[1:]):
+        if(args.draw):
             draw_solution(graph, solution)
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])
