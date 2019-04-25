@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import copy, logging, sys, os, time, argparse
+import copy, logging, sys, os, time, argparse, signal
 from branchbound import branch, branch_and_bound, branch_and_reduce, get_maximal_matching
 from vc_preprocessing import *
 from igraph import *
@@ -9,6 +9,10 @@ from crown_decomposition import *
 from vc_checker import *
 from graph_generator import *
 #print (igraph.__version__)
+
+def timeout_handler(signum, frame):
+    print("\ntime limit exceeded\n")
+    raise Exception("tle")
 
 def solve_k_vertex_cover(g, param, v_visited, args):
     #FILENAME = "samplefile.gr"
@@ -84,7 +88,7 @@ def linear_search_k_vc(g):
     found = False
     k=0
     while not found:
-        solution = solve_k_vertex_cover(graph.copy(), k, v_visited)
+        solution = solve_k_vertex_cover(graph.copy(), k, args, v_visited)
         if(check_correctness(g.copy(), solution)):
             found = True
         k += 1
@@ -98,8 +102,9 @@ def bin_search_k_vc(g, args):
     print("initial preprocessing done:")
     print(summary(reduced_g))
     lower = len(branchbound.get_maximal_matching(reduced_g)[0])
-    if(lower > 1000):
-        return lower, v_visited
+    # for manual choice of how big is too big
+    # if(lower > 1000):
+    #     return lower, v_visited
     upper = reduced_g.vcount()
     found = False
     best_solution = [0]*(upper+1)
@@ -122,32 +127,41 @@ def bin_search_k_vc(g, args):
         if(len(solution) < len(best_solution)):
             best_solution = solution
 
-    best_solution |= partial
+    print(best_solution)
     # while True:
+    #     current -= 1
     #     print("checking for smaller k: "+ str(current))
-    #     solution, v_visited = solve_k_vertex_cover(graph.copy(), len(best_solu), v_visited)
-    #     if len(solution) == current:
-    #         found = True
-    #         print("found for "+ str(current))
-    #     if(check_correctness(g.copy(), solution) and len(solution) < len(best_solution)):
+    #     solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current-1, v_visited, args)
+    #     if(check_correctness(reduced_g.copy(), solution) and len(solution) < len(best_solution)):
+    #         print("foudn better")
     #         best_solution = solution
     #     else:
     #         break
 
+    print(best_solution)
+    best_solution |= partial
     return best_solution, v_visited
 if __name__ == "__main__":
-
+    # for logging performance of the program
     logging.basicConfig(filename='performance_measure.log', level=logging.DEBUG)
     logging.info("\nthis is log of perf_counter over each instance.")
-    min_k = 1000000
+    # min_k = 1000000
+
+    # for command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4], help="choose optimization level: \n0 - none, \n1 - add upper\
                         and lower bound; \n2 - add quadratic kernel, \n3 - add interleaving, \n4 - add linear kernel", \
                         default = 4)
     parser.add_argument("-d", "--draw", help = "draws solution using PyCairo library", action="store_true")
+    parser.add_argument("-t", "--timeout", help="# of seconds before a single instace raises \
+                        an Exception", type = int, default = 10)
     parser.add_argument("folder", help="path to problem instances")
     args = parser.parse_args()
     logging.info(str("optimization level: " + str(args.optimization)))
+
+    # for timeout on too large instances:
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(args.timeout)
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
     #     solution = solve_k_vertex_cover(graph.copy(), i)
@@ -191,7 +205,13 @@ if __name__ == "__main__":
         t = time.perf_counter()
         # if(graph.vcount() > 10000):
         #     continue
-        solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
+        try:
+            solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
+        except Exception as exc:
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(args.timeout)
+            logging.info("%s %s TIMEOUT", FILENAME, graph.vcount())
+            continue
         if type(solution) == int:
             print("vc to calculate is to big (lower bound " + str(solution) + ")")
             continue
@@ -199,8 +219,9 @@ if __name__ == "__main__":
         #measure t elapsed
         elapsed = time.perf_counter() - t
         # logging.info("%s took %s to compute", FILENAME, elapsed )
-        logging.info("%s %s", FILENAME, elapsed )
-        logging.info("visited " + str(vertices_visited[0]) + " nodes")
+        # logging.info("%s %s", FILENAME, elapsed )
+        # logging.info("visited " + str(vertices_visited[0]) + " nodes")
+        logging.info("%s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0])
         print("checker check:")
         check_correctness(graph.copy(), list(solution))
         if(args.draw):

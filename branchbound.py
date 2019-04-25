@@ -36,6 +36,9 @@ def solve_degree_two(g, v_visited):
 
     return taken
 def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
+
+    v_visited[0] += 1
+
     # DEGREE_TWO_SOLVER = True
     DEGREE_TWO_SOLVER = False
     # g, p_solution = no_param_preprocessing(g, solution)
@@ -82,7 +85,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
     #branch; b1 has taken v
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
-    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, k)
+    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, k, v_visited)
     # print("new branches: ")
     # print(b1.summary())
     # print(b2.summary())
@@ -139,17 +142,23 @@ def branch_and_bound(g, k, solution):
                 instances.add(b2)
     return current_best_solution
 
-def branch(g, v, solution, k):
+def branch(g, v, solution, k, v_visited):
+    # copy is sloww
+    v_visited[0] += 2*g.vcount()
     i_taken = copy.deepcopy(g)#g.copy()
     s1 = copy.deepcopy(solution)
     i_not_taken = copy.deepcopy(g)#g.copy()
     s2 = copy.deepcopy(solution)
     s1.add(g.vs[v]["original_index"])
-    for r in g.neighbors(v):
+
+    nbrs = g.neighbors(v)
+    v_visited[0] += len(nbrs)
+
+    for r in nbrs:
         s2.add(g.vs[r]["original_index"])
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)
-    new_k = k-len(g.neighbors(v))
+    new_k = k-len(nbrs)
     # print(k)
     # print(len(g.neighbors(v)))
     # print("new_k: " + str(new_k))
