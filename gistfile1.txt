@@ -1,0 +1,30 @@
+Thu Apr 25 18:26:19 2019    solver_profile
+
+         1539475553 function calls (1301532693 primitive calls) in 754.776 seconds
+
+   Ordered by: internal time
+   List reduced from 1123 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+237964940/33907  258.293    0.000  599.190    0.018 copy.py:132(deepcopy)
+ 66955738  119.809    0.000  362.218    0.000 copy.py:219(_deepcopy_tuple)
+475964590   60.614    0.000   60.614    0.000 {method 'get' of 'dict' objects}
+ 66955737   46.360    0.000  236.934    0.000 copy.py:220(<listcomp>)
+    56064   42.263    0.001  578.948    0.010 copy.py:210(_deepcopy_list)
+    10548   37.032    0.004   51.888    0.005 branchbound.py:13(get_maximal_matching)
+    19581   34.094    0.002   39.547    0.002 vc_preprocessing.py:76(pendant_v_reduction)
+305311477   25.817    0.000   25.817    0.000 {built-in method builtins.id}
+    90041   20.575    0.000   20.575    0.000 {method 'delete_vertices' of 'igraph.Graph' objects}
+ 57257206   17.284    0.000   17.284    0.000 __init__.py:2495(vs)
+170830583   16.164    0.000   16.164    0.000 copy.py:190(_deepcopy_atomic)
+    19581   13.511    0.001   29.623    0.002 vc_preprocessing.py:105(degree_two_reduction)
+107813453   10.764    0.000   10.764    0.000 {method 'append' of 'list' objects}
+    22209    9.233    0.000    9.233    0.000 {method 'get_edgelist' of 'igraph.Graph' objects}
+    22249    8.626    0.000    8.724    0.000 __init__.py:144(__init__)
+       99    6.354    0.064    8.557    0.086 vc_io.py:5(readgraph)
+  9506133    5.364    0.000    5.364    0.000 {method 'neighbors' of 'igraph.Graph' objects}
+  9243438    3.075    0.000    3.075    0.000 {method 'get_eid' of 'igraph.Graph' objects}
+    19581    2.558    0.000    7.495    0.000 vc_preprocessing.py:54(popular_v_reduction)
+    19581    2.480    0.000    7.576    0.000 vc_preprocessing.py:35(isolated_v_reduction)
+
+
