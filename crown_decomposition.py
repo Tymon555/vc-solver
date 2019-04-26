@@ -10,6 +10,8 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     # crown decomp only guaranteed if |v| > 3k
     if(c.vcount() <= 3*k):
         print("already have a kernel")
+        # print(c.vcount())
+        # print(3*k)
         return c, k, solution
     crown_head, partial = crown_decomposition(c, k, solution, v_visited)
 

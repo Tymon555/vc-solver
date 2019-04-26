@@ -101,7 +101,7 @@ def bin_search_k_vc(g, args):
     lower = 0
     print("initial preprocessing done:")
     print(summary(reduced_g))
-    lower = len(branchbound.get_maximal_matching(reduced_g)[0])
+    lower = len(branchbound.get_maximal_matching(reduced_g, v_visited)[0])
     # for manual choice of how big is too big
     # if(lower > 1000):
     #     return lower, v_visited
@@ -109,6 +109,7 @@ def bin_search_k_vc(g, args):
     found = False
     best_solution = [0]*(upper+1)
     print("starting binary search...")
+    print("lower bound: "+ str(lower))
     while lower <= upper and not found:
         current = int((upper + lower)/2)
         print("checking for potential vc of size: " + str(current))
@@ -128,18 +129,19 @@ def bin_search_k_vc(g, args):
             best_solution = solution
 
     print(best_solution)
-    # while True:
-    #     current -= 1
-    #     print("checking for smaller k: "+ str(current))
-    #     solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current-1, v_visited, args)
-    #     if(check_correctness(reduced_g.copy(), solution) and len(solution) < len(best_solution)):
-    #         print("foudn better")
-    #         best_solution = solution
-    #     else:
-    #         break
+    while True:
+        current -= 1
+        print("checking for smaller k: "+ str(current))
+        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited, args)
+        if(check_correctness(reduced_g.copy(), solution) and len(solution) < len(best_solution)):
+            print("foudn better")
+            best_solution = solution
+        else:
+            break
 
-    print(best_solution)
     best_solution |= partial
+    print(best_solution)
+
     return best_solution, v_visited
 if __name__ == "__main__":
     # for logging performance of the program
@@ -221,7 +223,7 @@ if __name__ == "__main__":
         # logging.info("%s took %s to compute", FILENAME, elapsed )
         # logging.info("%s %s", FILENAME, elapsed )
         # logging.info("visited " + str(vertices_visited[0]) + " nodes")
-        logging.info("%s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0])
+        logging.info("%s %s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0], len(solution))
         print("checker check:")
         check_correctness(graph.copy(), list(solution))
         if(args.draw):
