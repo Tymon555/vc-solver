@@ -16,7 +16,7 @@ def apply_preprocessing(G, k , solution, args, v_visited=[0]):
                  return G, -2, solution
              G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
              G, k, solution = degree_two_reduction(G, k, solution,v_visited )
-             # only if other reductions are not doing anything
+             # only if other reductionr are not doing anything
              if(old_k == k and args.optimization >= 4):
                  G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
     return G, k, solution
@@ -34,18 +34,20 @@ def no_param_preprocessing(g, solution):
     return g, set(solution)
 def isolated_v_reduction(G, v_visited):
     degrees = G.degree(G.vs)
+    #this visits |V| vertices
+    v_visited[0] += G.vcount()
     #print(G)
     #deleted = list(range(len(degrees)))
     isolated = []
     #print(deleted)
-    v_visited[0] += len(G.vs)
     for i, v in enumerate(degrees):
         if (v == 0):
             isolated.append(G.vs[i])
             #deleted.append(G.vs[i]['original_index'])
             #G.delete_vertices(i)
-    #print(G)
-    #print(str(isolated))
+    #this visits |V| vertices
+    v_visited[0] += G.vcount()
+    #
     # print(str(len(isolated)) + " isolated vertices")
     G.delete_vertices(isolated)
     #print("deleted vs: " + str(deleted))
@@ -57,7 +59,7 @@ def popular_v_reduction (G, k, solution, v_visited):
     # print("degrees: " + str(degrees))
     popular = []
     partial = []
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
     for i, v in enumerate(degrees):
         if (v > k):
             # print(str(v) + " " + str(k))
@@ -80,7 +82,9 @@ def pendant_v_reduction(G, k, solution, v_visited):
     neighbrs = []
     partial = []
 
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
+    # for degree() and enumerate()
+
     for i, d in enumerate(degrees):
         # print(str(i) + " " + str(d))
         if( d == 1 ):
@@ -108,7 +112,7 @@ def degree_two_reduction(G, k, solution, v_visited):
     taken = []
     partial = []
 
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
     for i, d in enumerate(degrees):
         if( d == 2 ):
             #print("degree2")
@@ -148,3 +152,11 @@ def quad_kernel_reduction(G, k):
         return False
     else:
         return True
+
+
+#args: graph, queue of vertices to check, vertices visited count
+def local_reduction(G, to_check, v_visited):
+    taken = []
+    partial = []
+
+    while(!to_check.empty()):

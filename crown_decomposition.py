@@ -32,8 +32,9 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     return G, k, solution
 
 #where can I reach using alternating path
-def walk(G, v, last_path, Z):
+def walk(G, v, last_path, Z, v_visited):
     for n in G.neighbors(v):
+        v_visited[0] += 1
         if(G.vs[n]["hk_matched"] != last_path):
             #take to set Z and follow path
             Z.add(G.vs[n])
@@ -43,10 +44,10 @@ def walk(G, v, last_path, Z):
 def get_vc_from_matching(G, M, Vm, I, v_visited):
     #TODO test it
     Z = set()
-    v_visited[0] += 1
+    # v_visited[0] += 1
     for v in Vm:
         if not v["hk_matched"]:
-            walk(G, v, True, Z) # unmatched, so no incident edges matching
+            walk(G, v, True, Z, v_visited) # unmatched, so no incident edges matching
     #print("Z: " + str(Z))
     S = (Vm-Z) | (I & Z) #Konig's theorem
     # print("S: " + str(S))

@@ -160,10 +160,11 @@ if __name__ == "__main__":
     parser.add_argument("folder", help="path to problem instances")
     args = parser.parse_args()
     logging.info(str("optimization level: " + str(args.optimization)))
-
+    print("timeout: "+ str(args.timeout))
     # for timeout on too large instances:
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(args.timeout)
+
     # for i in range(2830, 2, -1):
     #     print("for k = " + str(i) + "... ")
     #     solution = solve_k_vertex_cover(graph.copy(), i)
@@ -176,7 +177,7 @@ if __name__ == "__main__":
     #         print(min_k)
     #         break
     #     break
-    folder = "public"
+    # folder = "public"
     # if(len(sys.argv) > 1):
     #     folder = sys.argv[1]
     folder = args.folder
@@ -198,6 +199,7 @@ if __name__ == "__main__":
             check_correctness(graph, list(solution))
 
     files = [file for file in os.listdir(folder) if file.endswith(".gr") or file.endswith(".edge")]
+
     for file in sorted(files):
         FILENAME = os.path.join(folder, file)
         # FILENAME = "public/vc-exact_001.gr"
@@ -210,9 +212,11 @@ if __name__ == "__main__":
         try:
             solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
         except Exception as exc:
+            print(exc)
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(args.timeout)
             logging.info("%s %s TIMEOUT", FILENAME, graph.vcount())
+            print("timeout")
             continue
         if type(solution) == int:
             print("vc to calculate is to big (lower bound " + str(solution) + ")")
