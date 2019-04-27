@@ -10,9 +10,12 @@ from vc_checker import *
 from graph_generator import *
 #print (igraph.__version__)
 
+class TimeoutException(Exception):
+    pass
+
 def timeout_handler(signum, frame):
     print("\ntime limit exceeded\n")
-    raise Exception("tle")
+    raise TimeoutException("tle")
 
 def solve_k_vertex_cover(g, param, v_visited, args):
     #FILENAME = "samplefile.gr"
@@ -96,6 +99,7 @@ def linear_search_k_vc(g):
 def bin_search_k_vc(g, args):
     for v in g.vs:
         v['original_index'] = v.index
+        v['name'] = str(v.index)
     v_visited = [0]
     reduced_g, _, partial = apply_preprocessing(g.copy(), g.vcount(), set(), args)
     lower = 0
@@ -129,15 +133,15 @@ def bin_search_k_vc(g, args):
             best_solution = solution
 
     print(best_solution)
-    while True:
-        current -= 1
-        print("checking for smaller k: "+ str(current))
-        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited, args)
-        if(check_correctness(reduced_g.copy(), solution) and len(solution) < len(best_solution)):
-            print("foudn better")
-            best_solution = solution
-        else:
-            break
+    # while True:
+    #     current -= 1
+    #     print("checking for smaller k: "+ str(current))
+    #     solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited, args)
+    #     if(check_correctness(reduced_g.copy(), solution) and len(solution) < len(best_solution)):
+    #         print("foudn better")
+    #         best_solution = solution
+    #     else:
+    #         break
 
     best_solution |= partial
     print(best_solution)
@@ -151,9 +155,9 @@ if __name__ == "__main__":
 
     # for command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4], help="choose optimization level: \n0 - none, \n1 - add upper\
+    parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4,5], help="choose optimization level: \n0 - none, \n1 - add upper\
                         and lower bound; \n2 - add quadratic kernel, \n3 - add interleaving, \n4 - add linear kernel", \
-                        default = 4)
+                        default = 5)
     parser.add_argument("-d", "--draw", help = "draws solution using PyCairo library", action="store_true")
     parser.add_argument("-t", "--timeout", help="# of seconds before a single instace raises \
                         an Exception", type = int, default = 10)
@@ -211,7 +215,7 @@ if __name__ == "__main__":
         #     continue
         try:
             solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
-        except Exception as exc:
+        except TimeoutException as exc:
             print(exc)
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(args.timeout)

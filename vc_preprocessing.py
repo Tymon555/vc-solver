@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import crown_decomposition
-import sys
+import sys, queue
 
 def apply_preprocessing(G, k , solution, args, v_visited=[0]):
     #apply all preprocessing rules naively
@@ -154,9 +154,53 @@ def quad_kernel_reduction(G, k):
         return True
 
 
-#args: graph, queue of vertices to check, vertices visited count
-def local_reduction(G, to_check, v_visited):
+#args: graph, size of VC param, current solution
+#queue of vertices to check, vertices visited count
+def local_reduction(G, k, solution, tbd, v_visited):
+    # print(G)
     taken = []
     partial = []
+    q = queue.Queue()
+    for e in tbd:
+        q.put(e)
+        # G.vs[e]["deleted"] = True
+    while(not q.empty()):
+        e = q.get()
+        print(e)
+        print("v names: " + str(G.vs['name']))
+        v = G.vs.select(name=e)
+        d = G.degree(v)
+        if(d == 0):
+            print("deleting "+str(v))
+            G.delete_vertices(v)
+        if(d == 1):
+            adj = G.neighbors(v)
+            adj = adj[0]
+            if(v not in partial):
+                partial.append(G.vs[adj]['name'])
+                #add neighbors of neighbor of pendant v to queue
+                for e in G.neighbors(G.vs[adj])['name']:
+                    if(e != v):
+                        q.put(e)
+                G.delete_vertices([v, adj])
+            print("deleting "+str(G.vs[v]['name']  +str(G.vs[adj]['name'])))
+        if(d == 2):
+            adj = G.neighbors(v)
+            if(G.get_eid(adj[0], adj[1], True, False) != -1):
+                ap = [G.vs[adj[0]]['name'], G.vs[adj[1]]['name']]
+                to_queue = g.neighborhood([G.vs[adj[0]], G.vs[adj[1]]])
+                to_queue = [G.vs[item]['name'] for sublist in to_queue for item in sublist]
+                to_queue = list(set(to_queue) - set([v, G.vs[adj[0]], G.vs[adj[1]]]))
+                for e in to_queue:
+                    q.put(e)
+                partial.append(ap[0])
+                partial.append(ap[1])
+                print("deleting "+str(G.vs[v]['name'] + " " +str(G.vs[adj[0]]['name']))+ " " +str(G.vs[adj[1]]['name']))
 
-    while(!to_check.empty()):
+                G.delete_vertices([v, G.vs[adj[0]], G.vs[adj[1]]])
+
+            #else:
+            #for merge 2 scenario
+    solution |= set(partial)
+    k -= len(partial)
+    return G, k, solution

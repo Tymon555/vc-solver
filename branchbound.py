@@ -52,7 +52,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
         if(degree <= 2 and DEGREE_TWO_SOLVER):
             return solution | solve_degree_two(copy.deepcopy(g), v_visited)
 
-    if(args.optimization >= 3):
+    if(args.optimization >= 3 and args.optimization < 5):
         g, k, solution = apply_preprocessing(g, k, solution, args, v_visited)
         #TODO: localised interleaving
     # print("after reductions:")
@@ -67,7 +67,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
     # print("solution after no param processing: ")
     # print(" after bnb preprocessing: " + str(len(solution)))
     # print(g.summary())
-    if(args.optimization >= 1):
+    if(args.optimization >= 1 ):
         lower_bound, v_visited = get_maximal_matching(copy.deepcopy(g), v_visited)
         # print("lwer bound: " + str(lower_bound))
         # print(len(lower_bound))
@@ -85,7 +85,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
     v, _ = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
     #branch; b1 has taken v
     # print(str(v) + " is highest degree (" + str(g.vs[v]['original_index']))
-    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, k, v_visited)
+    (b1, sol1,k1), (b2, sol2, k2) = branch(g, v, solution, k, v_visited, args)
     # print("new branches: ")
     # print(b1.summary())
     # print(b2.summary())
@@ -142,7 +142,7 @@ def branch_and_bound(g, k, solution):
                 instances.add(b2)
     return current_best_solution
 
-def branch(g, v, solution, k, v_visited):
+def branch(g, v, solution, k, v_visited, args):
     # copy is sloww
     v_visited[0] += 2*g.vcount()
     i_taken = copy.deepcopy(g)#g.copy()
@@ -156,6 +156,14 @@ def branch(g, v, solution, k, v_visited):
 
     for r in nbrs:
         s2.add(g.vs[r]["original_index"])
+
+    if(args.optimization >= 5):
+        to_check1 = g.neighbors(g.vs[v])
+        to_check1 = [g.vs[v]['name'] for v in to_check1]
+        to_check2 = g.neighborhood(g.neighbors(v))
+        to_check2 = [g.vs[item]['name'] for sublist in to_check2 for item in sublist]
+        to_check2 = list(set(to_check2) - set(g.neighborhood(v)))
+        print("check2: "+str(to_check2))
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)
     new_k = k-len(nbrs)
@@ -163,6 +171,11 @@ def branch(g, v, solution, k, v_visited):
     # print(len(g.neighbors(v)))
     # print("new_k: " + str(new_k))
     i_not_taken.delete_vertices((g.neighbors(v)+[v]))
+
+    if(args.optimization >= 5):
+        i_taken, k, s1  = local_reduction(i_taken, k, s1, to_check1, v_visited)
+        i_not_taken, new_k, s2= local_reduction(i_not_taken, new_k, s2, to_check2, v_visited)
+
     return ((i_taken, s1, k-1), (i_not_taken, s2, new_k))
 
 # old branch
