@@ -7,10 +7,11 @@ from igraph import *
 def check_correctness(g, vc):
     logging.basicConfig(filename='check.log', level=logging.DEBUG)
     # logging.info("this is log test.")
+    vc = [int(v) for v in vc] # local preprocessing gives name, which is str
     g.delete_vertices(vc)
     # print(g)
-    print("Nr of edges left: ")
-    print(g.ecount())
+    # print("Nr of edges left: ")
+    # print(g.ecount())
     if(g.ecount() == 0):
         # logging.info("found cover of size " + str(len(vc)))
         print("found cover of size " + str(len(vc)))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import crown_decomposition
-import sys
+import sys, queue
 
 def apply_preprocessing(G, k , solution, args, v_visited=[0]):
     #apply all preprocessing rules naively
@@ -12,11 +12,12 @@ def apply_preprocessing(G, k , solution, args, v_visited=[0]):
              G = isolated_v_reduction(G, v_visited)
              G, k, solution= popular_v_reduction(G, k, solution, v_visited)
              if(quad_kernel_reduction(G, k) is False):
-                 # print("no-instance")
+                 if(args.verbose >= 3):
+                      print("no-instance")
                  return G, -2, solution
              G, k, solution = pendant_v_reduction(G, k, solution, v_visited)
              G, k, solution = degree_two_reduction(G, k, solution,v_visited )
-             # only if other reductions are not doing anything
+             # only if other reductionr are not doing anything
              if(old_k == k and args.optimization >= 4):
                  G, k, solution = crown_decomposition.apply_crown_decomposition(G, k, solution, v_visited)
     return G, k, solution
@@ -34,43 +35,54 @@ def no_param_preprocessing(g, solution):
     return g, set(solution)
 def isolated_v_reduction(G, v_visited):
     degrees = G.degree(G.vs)
-    #print(G)
+    #this visits |V| vertices
+    v_visited[0] += G.vcount()
+    # if(args.verbose >= 3):
+    #     print(G)
     #deleted = list(range(len(degrees)))
     isolated = []
-    #print(deleted)
-    v_visited[0] += len(G.vs)
+    #if(args.verbose >= 3):
+# print(deleted)
     for i, v in enumerate(degrees):
         if (v == 0):
             isolated.append(G.vs[i])
             #deleted.append(G.vs[i]['original_index'])
             #G.delete_vertices(i)
-    #print(G)
-    #print(str(isolated))
-    # print(str(len(isolated)) + " isolated vertices")
+    #this visits |V| vertices
+    v_visited[0] += G.vcount()
+    #
+    # if(args.verbose >= 3):
+    #     print(str(len(isolated)) + " isolated vertices")
     G.delete_vertices(isolated)
-    #print("deleted vs: " + str(deleted))
+    # if(args.verbose >= 3):
+    #     print("deleted vs: " + str(deleted))
     return G
 
 def popular_v_reduction (G, k, solution, v_visited):
     degrees = G.degree(G.vs)
 
-    # print("degrees: " + str(degrees))
+    # if(args.verbose >= 3):
+# print("degrees: " + str(degrees))
     popular = []
     partial = []
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
     for i, v in enumerate(degrees):
         if (v > k):
-            # print(str(v) + " " + str(k))
+            # if(args.verbose >= 3):
+# print(str(v) + " " + str(k))
             popular.append(G.vs[i])
             partial.append(G.vs[i]['original_index'])
             #k-=1;
-    #print(str(popular))
+    #if(args.verbose >= 3):
+# print(str(popular))
     G.delete_vertices(popular)
     solution |= set(partial)
     k -= len(partial)
 
-    # print(str(len(partial)) + " popular vertices")
-    # print("deleted vs: " + str(deleted))
+    # if(args.verbose >= 3):
+# print(str(len(partial)) + " popular vertices")
+    # if(args.verbose >= 3):
+# print("deleted vs: " + str(deleted))
     return G, k, solution
 
 def pendant_v_reduction(G, k, solution, v_visited):
@@ -80,25 +92,31 @@ def pendant_v_reduction(G, k, solution, v_visited):
     neighbrs = []
     partial = []
 
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
+    # for degree() and enumerate()
+
     for i, d in enumerate(degrees):
-        # print(str(i) + " " + str(d))
+        # if(args.verbose >= 3):
+# print(str(i) + " " + str(d))
         if( d == 1 ):
             adj = G.neighbors(G.vs[i])
             adj = adj[0]
             if(G.vs[i]['original_index'] not in partial):
                 #to not add two adjacent pendant vs
-                # print(":add")
+                # if(args.verbose >= 3):
+# print(":add")
                 pendant.append(G.vs[i])
                 neighbrs.append(adj)
                 partial.append(G.vs[adj]['original_index'])
 
-    # print("pendant: " + str(pendant))
+    # if(args.verbose >= 3):
+# print("pendant: " + str(pendant))
     G.delete_vertices(neighbrs+pendant)
     solution |= set(partial)
     k -= len(partial)
     # if(partial):
-        # print(str(len(partial)) + " pendant vertices")
+        # if(args.verbose >= 3):
+# print(str(len(partial)) + " pendant vertices")
     
     return G, k, solution
 
@@ -108,10 +126,11 @@ def degree_two_reduction(G, k, solution, v_visited):
     taken = []
     partial = []
 
-    v_visited[0] += len(G.vs)
+    v_visited[0] += 2*G.vcount()
     for i, d in enumerate(degrees):
         if( d == 2 ):
-            #print("degree2")
+            #if(args.verbose >= 3):
+# print("degree2")
             adj = G.neighbors(G.vs[i])
             if(G.get_eid(adj[0], adj[1], True, False) != -1):
                 #take both neighbors
@@ -130,10 +149,12 @@ def degree_two_reduction(G, k, solution, v_visited):
                 # neighbrd.remove(adj[0])
                 # #remove and replace with single vertex; decrease k
                 # G.delete_vertices(adj.append(i))
-                # print("union of neighborhoods: " + str(neighbrd))
+                # if(args.verbose >= 3):
+# print("union of neighborhoods: " + str(neighbrd))
 
 
-    # print("added to vc: " + str(taken))
+    # if(args.verbose >= 3):
+# print("added to vc: " + str(taken))
     G.delete_vertices(taken)
     solution |= set(partial)
     k -= len(partial)
@@ -148,3 +169,81 @@ def quad_kernel_reduction(G, k):
         return False
     else:
         return True
+
+
+#args: graph, size of VC param, current solution
+#queue of vertices to check, vertices visited count
+def local_reduction(G, k, solution, tbd, v_visited):
+    # if(args.verbose >= 3):
+# print()
+    # if(args.verbose >= 3):
+# print(G)
+    taken = []
+    partial = []
+    q = set()
+    for e in tbd:
+        q.add(e)
+        # G.vs[e]["deleted"] = True
+    while(q):
+#         if(args.verbose >= 3):
+# print("q: "+ str(q))
+        #TODO : don't add if it's alreadyu in queue!
+        #maybe sets?
+        e = q.pop()
+#         if(args.verbose >= 3):
+# print(e)
+#         if(args.verbose >= 3):
+# print("v names: " + str(G.vs['name']))
+        v = G.vs.find(str(e))
+#         if(args.verbose >= 3):
+# print("v: " + str(v))
+        d = G.degree(v)
+        if(d == 0):
+#             if(args.verbose >= 3):
+# print("deleting "+str(v) + " (isolated)")
+            G.delete_vertices(v)
+        if(d == 1):
+            adj = G.neighbors(v)
+            adj = adj[0]
+            if(v not in partial):
+                partial.append(G.vs[adj]['name'])
+                #add neighbors of neighbor of pendant v to queue
+                # if(args.verbose >= 3):
+# print(adj)
+#                 if(args.verbose >= 3):
+# print(G.neighbors(G.vs[adj]))
+                for e in G.neighbors(G.vs[adj]):
+                    if(G.vs[e]['name'] != v['name']):
+                        q.add(G.vs[e]['name'])
+                #cannot delete both, bc can be in queue?
+                #delete from queue as a solution
+                q.discard(G.vs[adj]['name'])
+#                 if(args.verbose >= 3):
+# print("deleting "+str(v['name']  +str(G.vs[adj]['name'])))
+                G.delete_vertices([v, adj])
+        if(d == 2):
+            adj = G.neighbors(v)
+            if(G.get_eid(adj[0], adj[1], True, False) != -1):
+                ap = [G.vs[adj[0]]['name'], G.vs[adj[1]]['name']]
+                to_queue = G.neighborhood([G.vs[adj[0]], G.vs[adj[1]]])
+                to_queue = [G.vs[item]['name'] for sublist in to_queue for item in sublist]
+                to_queue = list(set(to_queue) - set([v, G.vs[adj[0]], G.vs[adj[1]]]))
+                for e in to_queue:
+                    q.add(e)
+                partial.append(ap[0])
+                partial.append(ap[1])
+#                 if(args.verbose >= 3):
+# print("deleting "+str(v['name'] + " " +str(G.vs[adj[0]]['name']))+ " " +str(G.vs[adj[1]]['name']))
+                #delete from queue as a solution
+                q.discard(G.vs[adj[0]]['name'])
+                q.discard(G.vs[adj[1]]['name'])
+                q.discard(v['name'])
+                G.delete_vertices([v, G.vs[adj[0]], G.vs[adj[1]]])
+
+            #else:
+            #for merge 2 scenario
+    solution |= set(partial)
+    k -= len(partial)
+#     if(args.verbose >= 3):
+# print(G)
+    return G, k, solution
