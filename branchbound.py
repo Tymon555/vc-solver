@@ -1,6 +1,6 @@
 import copy
 from vc_preprocessing import *
-
+from igraph import *
 def greedy_solution(g):
     solution = []
     while(len(g.es) != 0):
@@ -50,7 +50,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
         v, degree = max(enumerate(g.degree()), key= lambda x: x[1]) # get v of maximum degree
         #print("max degree : " + str(degree))
         if(degree <= 2 and DEGREE_TWO_SOLVER):
-            return solution | solve_degree_two(copy.deepcopy(g), v_visited)
+            return solution | solve_degree_two(Graph.copy(g), v_visited)
 
     if(args.optimization >= 3 and args.optimization < 5):
         g, k, solution = apply_preprocessing(g, k, solution, args, v_visited)
@@ -68,7 +68,7 @@ def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
     # #print(" after bnb preprocessing: " + str(len(solution)))
     # #print(g.summary())
     if(args.optimization >= 1 ):
-        lower_bound, v_visited = get_maximal_matching(copy.deepcopy(g), v_visited)
+        lower_bound, v_visited = get_maximal_matching(Graph.copy(g), v_visited)
         # #print("lwer bound: " + str(lower_bound))
         # #print(len(lower_bound))
         if(len(solution) + len(lower_bound) >= len(current_best_solution) or len(lower_bound) > k):
@@ -144,10 +144,10 @@ def branch_and_bound(g, k, solution):
 
 def branch(g, v, solution, k, v_visited, args):
     # copy is sloww
-    v_visited[0] += 2*g.vcount()
-    i_taken = copy.deepcopy(g)#g.copy()
+    # v_visited[0] += 2*g.vcount()
+    i_taken = Graph.copy(g)#g.copy()
     s1 = copy.deepcopy(solution)
-    i_not_taken = copy.deepcopy(g)#g.copy()
+    i_not_taken = Graph.copy(g)#g.copy()
     s2 = copy.deepcopy(solution)
     s1.add(g.vs[v]["original_index"])
 

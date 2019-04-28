@@ -6,21 +6,21 @@ from igraph import *
 
 def apply_crown_decomposition(G, k, solution, v_visited):
     #cd graph param has to be passed a copy, not orignial graph
-    c = copy.deepcopy(G)
+    # c = copy.deepcopy(G)
     # crown decomp only guaranteed if |v| > 3k
-    if(c.vcount() <= 3*k):
+    if(G.vcount() <= 3*k):
         #print("already have a kernel")
         # #print(c.vcount())
         # #print(3*k)
-        return c, k, solution
-    crown_head, partial = crown_decomposition(c, k, solution, v_visited)
+        return G, k, solution
+    crown_head, partial = crown_decomposition(G, k, solution, v_visited)
 
     if((-1) in partial):
         #k+1 matching -> no-instance
         return G, -1, solution
     if(len(crown_head) == 0):
-        raise RuntimeException("empty crown head")
-        # ERROR - guaranteed to be non-empty
+        raise RuntimeError("empty crown head")
+        # ERROR - guarantGraph.copyeed to be non-empty
         # unless check whether |V| > 3k ???
         #print("ERROR IN CD")
     G.delete_vertices(crown_head)

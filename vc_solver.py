@@ -72,8 +72,8 @@ def solve_k_vertex_cover(g, param, v_visited, args):
         print("after crown reduction preprocesses:")
     if(args.verbose >= 3):
         print(g.summary())
-    if(args.verbose >= 3):
-        print("K: " + str(k))
+    # if(args.verbose >= 3):
+    #     print("K: " + str(k))
 
     g, k, solution = apply_preprocessing(g, vc_size, solution, args, v_visited)
     all_v = [v['original_index'] for v in g.vs]
@@ -103,24 +103,24 @@ def solve_k_vertex_cover(g, param, v_visited, args):
             print("the same vs taken in preprocessing and branch and reduce")
     return solution.union(rest_solution), v_visited
 
-def linear_search_k_vc(g):
-    k = 0
-    v_visited = [0]
-    found = False
-    k=0
-    while not found:
-        solution = solve_k_vertex_cover(graph.copy(), k, args, v_visited)
-        if(check_correctness(g.copy(), solution)):
-            found = True
-            k += 1
-    return solution
+# def linear_search_k_vc(g):
+#     k = 0
+#     v_visited = [0]
+#     found = False
+#     k=0
+#     while not found:
+#         solution = solve_k_vertex_cover(Graph.copy(g), k, args, v_visited)
+#         if(check_correctness(Graph.copy(g), solution)):
+#             found = True
+#             k += 1
+#     return solution
 def bin_search_k_vc(g, args):
     for v in g.vs:
         v['original_index'] = v.index
         v['name'] = str(v.index)
-        v_visited = [0]
-        reduced_g, _, partial = apply_preprocessing(g.copy(), g.vcount(), set(), args)
-        lower = 0
+    v_visited = [0]
+    # print("assigned name and org index")
+    reduced_g, _, partial = apply_preprocessing(Graph.copy(g), g.vcount(), set(), args, v_visited)
     if(args.verbose >= 3):
         print("initial preprocessing done:")
     if(args.verbose >= 3):
@@ -140,7 +140,7 @@ def bin_search_k_vc(g, args):
         current = int((upper + lower)/2)
         if(args.verbose >= 3):
             print("checking for potential vc of size: " + str(current))
-        solution, v_visited = solve_k_vertex_cover(reduced_g.copy(), current, v_visited, args)
+        solution, v_visited = solve_k_vertex_cover(Graph.copy(reduced_g), current, v_visited, args)
         if len(solution) == current:
             found = True
             if(args.verbose >= 3):
@@ -198,6 +198,9 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", help="debug to stdout", type=int, choices=[0,1,2,3], \
                         default=0)
     args = parser.parse_args()
+    #so we dont get tle on drawing modules
+    if(args.draw):
+        args.timeout = 10000
     logging.info(str("optimization level: " + str(args.optimization)))
     if(args.verbose >= 3):
         print("timeout: "+ str(args.timeout))
@@ -249,17 +252,16 @@ if __name__ == "__main__":
         FILENAME = os.path.join(folder, file)
         # FILENAME = "public/vc-exact_001.gr"
         # FILENAME = "degree_two_test.gr"
-        if(args.verbose >= 3):
+        if(args.verbose >= 1):
             print(FILENAME)
         graph = readgraph(FILENAME)
         t = time.perf_counter()
         # if(graph.vcount() > 10000):
         #     continue
         try:
-            solution, vertices_visited= bin_search_k_vc(graph.copy(), args)
+            solution, vertices_visited= bin_search_k_vc(Graph.copy(graph), args)
         except TimeoutException as exc:
-            if(args.verbose >= 3):
-                print(exc)
+            print(exc)
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(args.timeout)
             logging.info("%s %s TIMEOUT", FILENAME, graph.vcount())
@@ -279,7 +281,7 @@ if __name__ == "__main__":
         logging.info("%s %s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0], len(solution))
         if(args.verbose >= 3):
             print("checker check:")
-        check_correctness(graph.copy(), list(solution))
+        check_correctness(Graph.copy(graph), list(solution))
         if(args.draw):
             draw_solution(graph, solution)
         write_vc(FILENAME[:-3] + "-solution.vc", graph.vcount(), [v for v in solution])

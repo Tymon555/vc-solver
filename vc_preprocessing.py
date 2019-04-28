@@ -6,6 +6,7 @@ import sys, queue
 def apply_preprocessing(G, k , solution, args, v_visited=[0]):
     #apply all preprocessing rules naively
     old_k = k+1
+    # print(args)
     if args.optimization >= 2:
         while(old_k != k):
              old_k = k
