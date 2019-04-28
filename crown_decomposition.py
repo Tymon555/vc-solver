@@ -9,9 +9,9 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     c = copy.deepcopy(G)
     # crown decomp only guaranteed if |v| > 3k
     if(c.vcount() <= 3*k):
-        print("already have a kernel")
-        # print(c.vcount())
-        # print(3*k)
+        #print("already have a kernel")
+        # #print(c.vcount())
+        # #print(3*k)
         return c, k, solution
     crown_head, partial = crown_decomposition(c, k, solution, v_visited)
 
@@ -19,16 +19,17 @@ def apply_crown_decomposition(G, k, solution, v_visited):
         #k+1 matching -> no-instance
         return G, -1, solution
     if(len(crown_head) == 0):
+        raise RuntimeException("empty crown head")
         # ERROR - guaranteed to be non-empty
         # unless check whether |V| > 3k ???
-        print("ERROR IN CD")
+        #print("ERROR IN CD")
     G.delete_vertices(crown_head)
     solution |= set(partial)
 
-    # print(str(partial) + " taken to solution ")
-    print("crown reduction found partial of size " + str(len(partial)))
+    # #print(str(partial) + " taken to solution ")
+    #print("crown reduction found partial of size " + str(len(partial)))
     k -= len(partial)
-    # print(k)
+    # #print(k)
     return G, k, solution
 
 #where can I reach using alternating path
@@ -48,16 +49,16 @@ def get_vc_from_matching(G, M, Vm, I, v_visited):
     for v in Vm:
         if not v["hk_matched"]:
             walk(G, v, True, Z, v_visited) # unmatched, so no incident edges matching
-    #print("Z: " + str(Z))
+    ##print("Z: " + str(Z))
     S = (Vm-Z) | (I & Z) #Konig's theorem
-    # print("S: " + str(S))
+    # #print("S: " + str(S))
     return S
 
 def crown_decomposition(G, k, solution, v_visited=[0]):
 
     # requirement for crown reduction
     # if(G.vcount() > 3*k):
-    #     print("g has more than 3k vertices")
+    #     #print("g has more than 3k vertices")
     #     return set(), []
     #find maximal (greedy) matching
     matching_size = 0
@@ -67,7 +68,7 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
         v["matched"] = False
     to_delete = []
     for i, e in enumerate(G.es):
-        # print("for "+ str(e))
+        # #print("for "+ str(e))
         v_visited[0] += 2
         if(G.vs[e.target]["matched"] == False and G.vs[e.source]["matched"] == False  ):
             G.vs[e.target]["matched"] = True
@@ -75,44 +76,44 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
             matching_size += 1
             Vm.add(G.vs[e.target])
             Vm.add(G.vs[e.source])
-            # print("deleting ")
-            # print(e)
-            # print(G.vs[e.target])
-            # print(G.vs[e.source])
+            # #print("deleting ")
+            # #print(e)
+            # #print(G.vs[e.target])
+            # #print(G.vs[e.source])
             to_delete.append(e)
-            # print(Vm)
+            # #print(Vm)
             #
-    print([(G.vs[e.source], G.vs[e.target]) for e in to_delete])
+    #print([(G.vs[e.source], G.vs[e.target]) for e in to_delete])
     G.delete_edges(to_delete)
     s = set()
     s.update(G.vs)
     I = s-Vm
     #deleting to get bipartite (Vm, I)
-    # print(G.ecount())
+    # #print(G.ecount())
     to_delete = []
     for i, e in enumerate(G.es):
         v_visited[0] += 2
-        # print( str(e.target) + " " + str(e.source))
+        # #print( str(e.target) + " " + str(e.source))
         if(G.vs[e.target]["matched"] == True and G.vs[e.source]["matched"] == True):
-            # print("to bipratite" + str(e.target) + " " + str(e.source))
+            # #print("to bipratite" + str(e.target) + " " + str(e.source))
             to_delete.append(e)
     G.delete_edges(to_delete)
     v_visited[0] += len(G.vs)
     for v in G.vs:
         if(v in Vm and G.degree(v) == 0):
             Vm.remove(v)
-    # print("found matching of size " + str(matching_size))
-    # print()
-    # print("I: " + str(I))
-    print("Vm: " + str(Vm))
-    # print(G)
+    # #print("found matching of size " + str(matching_size))
+    # #print()
+    # #print("I: " + str(I))
+    #print("Vm: " + str(Vm))
+    # #print(G)
     if(matching_size > k):
         #we are done
         return set(), [-1]
     if matching_size == 0:
-        #print("empty matching")
+        ##print("empty matching")
         return set(), []
-    ##print(G)
+    ###print(G)
     #hopcroft-karp for maximum matching
     #and minimum v-c for G_i,v bipartite graph
     # G.vs[x]["matched"]: True->V_m, False - I
@@ -129,16 +130,16 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
     #         if v["hk_matched"] == True :
     #             continue
     #         bfs = G.bfs(v.index)
-    #         print(bfs)
+    #         #print(bfs)
     #         for i, index in enumerate(bfs[0]):
     #             parent = bfs[2][index]
-    #             print(str(index) + " " + str(parent))
+    #             #print(str(index) + " " + str(parent))
     #             if(G.vs[index]["hk_matched"] == False and \
     #                G.vs[parent]["hk_matched"] == False and \
     #                index not in v_in_aug_paths and \
     #                parent not in v_in_aug_paths and \
     #                index != parent): # is not the same v
-    #                 # #print("found v-disjoint shortest augmented path between " + str(index) + " and "+ str(parent))
+    #                 # ##print("found v-disjoint shortest augmented path between " + str(index) + " and "+ str(parent))
     #                 augmented_paths.add(G.get_eid(index, parent))#found v-disjoint shortest augmented path
     #                 v_in_aug_paths.add(index)
     #                 v_in_aug_paths.add(parent)
@@ -159,21 +160,21 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
         else:
             M.symmetric_difference_update(augmented_paths)
             augmented_paths.clear()
-    # print("M: ")
-    # print(str({(G.es[e].source, G.es[e].target) for e in M}))
+    # #print("M: ")
+    # #print(str({(G.es[e].source, G.es[e].target) for e in M}))
     vc = get_vc_from_matching(G, M, Vm, I, v_visited)
-    # #print("vs is:")
+    # ##print("vs is:")
     # #print (vc)
-    # #print("Vm is:")
-    # #print(Vm)
+    # ##print("Vm is:")
+    # ##print(Vm)
 
     #taking intersection of vc and Vm
     H = vc & Vm
-    # #print("crown decomposition with head:")
-    # #print(H)
-    #print("vc size: "+ str(len(vc)))
-    #print("head size: " + str(len(H)))
-    #print("graph size: "+ str(G.vcount()))
+    # ##print("crown decomposition with head:")
+    # ##print(H)
+    ##print("vc size: "+ str(len(vc)))
+    ##print("head size: " + str(len(H)))
+    ##print("graph size: "+ str(G.vcount()))
     #translating into original graph's stuff
     partial = [v["original_index"] for v in H]
     return H, partial
@@ -197,8 +198,8 @@ def hk_bfs(G, vs, v_in_aug_paths, v_visited):
     #     v = vs.get()
     #     v_visited[0] += 1
     #     ns = G.neighbors(v)
-    #     # print(v)
-    #     # print(ns)
+    #     # #print(v)
+    #     # #print(ns)
     #     v_visited[0] += len(ns)
     #     for n in ns:
     #         if(G.vs[v]["hk_matched"] == False and \
@@ -208,7 +209,7 @@ def hk_bfs(G, vs, v_in_aug_paths, v_visited):
     #             augmented_paths.add(G.get_eid(v, n))
     #             G.vs[v]["hk_matched"] = True
     #             G.vs[n]["hk_matched"] = True
-    #             # print(G.vs[n]["hk_matched"])
+    #             # #print(G.vs[n]["hk_matched"])
     #             v_in_aug_paths.add(v)
     #             v_in_aug_paths.add(n)
 
