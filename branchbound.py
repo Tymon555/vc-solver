@@ -162,7 +162,7 @@ def branch(g, v, solution, k, v_visited, args):
         to_check1 = [g.vs[v]['name'] for v in to_check1]
         to_check2 = g.neighborhood(g.neighbors(v))
         to_check2 = [g.vs[item]['name'] for sublist in to_check2 for item in sublist]
-        to_check2 = list(set(to_check2) - set(g.neighborhood(v)))
+        to_check2 = list(set(to_check2) - set([str(g.vs[e]['name']) for e in g.neighborhood(v)]))
         print("check2: "+str(to_check2))
     i_taken.delete_vertices(v)
     # i_not_taken.delete_vertices(v)

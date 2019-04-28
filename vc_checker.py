@@ -7,6 +7,7 @@ from igraph import *
 def check_correctness(g, vc):
     logging.basicConfig(filename='check.log', level=logging.DEBUG)
     # logging.info("this is log test.")
+    vc = [int(v) for v in vc] # local preprocessing gives name, which is str
     g.delete_vertices(vc)
     # print(g)
     print("Nr of edges left: ")

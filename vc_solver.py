@@ -132,6 +132,7 @@ def bin_search_k_vc(g, args):
         if(len(solution) < len(best_solution)):
             best_solution = solution
 
+    best_solution = {int(v) for v in best_solution}
     print(best_solution)
     # while True:
     #     current -= 1
@@ -155,12 +156,16 @@ if __name__ == "__main__":
 
     # for command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4,5], help="choose optimization level: \n0 - none, \n1 - add upper\
-                        and lower bound; \n2 - add quadratic kernel, \n3 - add interleaving, \n4 - add linear kernel", \
+    parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4,5], help="choose \
+                        optimization level: 0 - none, 1 - add upper and lower bound; 2 - \
+                        add quadratic kernel, 3 - add interleaving, 4 - add linear kernel, \
+                        5 - use local preprocessing rules (bfs from neighborhood of deleted v)",\
                         default = 5)
     parser.add_argument("-d", "--draw", help = "draws solution using PyCairo library", action="store_true")
     parser.add_argument("-t", "--timeout", help="# of seconds before a single instace raises \
                         an Exception", type = int, default = 10)
+    parser.add_argument("-v", "--verbose", help = "set verbosity. 3 - debug stmts for all parts\
+                        are produced.", type = int, choices=[0,1,2,3], default=0)
     parser.add_argument("folder", help="path to problem instances")
     args = parser.parse_args()
     logging.info(str("optimization level: " + str(args.optimization)))

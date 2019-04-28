@@ -157,21 +157,26 @@ def quad_kernel_reduction(G, k):
 #args: graph, size of VC param, current solution
 #queue of vertices to check, vertices visited count
 def local_reduction(G, k, solution, tbd, v_visited):
-    # print(G)
+    print()
+    print(G)
     taken = []
     partial = []
-    q = queue.Queue()
+    q = set()
     for e in tbd:
-        q.put(e)
+        q.add(e)
         # G.vs[e]["deleted"] = True
-    while(not q.empty()):
-        e = q.get()
+    while(q):
+        print("q: "+ str(q))
+        #TODO : don't add if it's alreadyu in queue!
+        #maybe sets?
+        e = q.pop()
         print(e)
         print("v names: " + str(G.vs['name']))
-        v = G.vs.select(name=e)
+        v = G.vs.find(str(e))
+        print("v: " + str(v))
         d = G.degree(v)
         if(d == 0):
-            print("deleting "+str(v))
+            print("deleting "+str(v) + " (isolated)")
             G.delete_vertices(v)
         if(d == 1):
             adj = G.neighbors(v)
@@ -179,28 +184,37 @@ def local_reduction(G, k, solution, tbd, v_visited):
             if(v not in partial):
                 partial.append(G.vs[adj]['name'])
                 #add neighbors of neighbor of pendant v to queue
-                for e in G.neighbors(G.vs[adj])['name']:
-                    if(e != v):
-                        q.put(e)
+                # print(adj)
+                print(G.neighbors(G.vs[adj]))
+                for e in G.neighbors(G.vs[adj]):
+                    if(G.vs[e]['name'] != v['name']):
+                        q.add(G.vs[e]['name'])
+                #cannot delete both, bc can be in queue?
+                #delete from queue as a solution
+                q.discard(G.vs[adj]['name'])
+                print("deleting "+str(v['name']  +str(G.vs[adj]['name'])))
                 G.delete_vertices([v, adj])
-            print("deleting "+str(G.vs[v]['name']  +str(G.vs[adj]['name'])))
         if(d == 2):
             adj = G.neighbors(v)
             if(G.get_eid(adj[0], adj[1], True, False) != -1):
                 ap = [G.vs[adj[0]]['name'], G.vs[adj[1]]['name']]
-                to_queue = g.neighborhood([G.vs[adj[0]], G.vs[adj[1]]])
+                to_queue = G.neighborhood([G.vs[adj[0]], G.vs[adj[1]]])
                 to_queue = [G.vs[item]['name'] for sublist in to_queue for item in sublist]
                 to_queue = list(set(to_queue) - set([v, G.vs[adj[0]], G.vs[adj[1]]]))
                 for e in to_queue:
-                    q.put(e)
+                    q.add(e)
                 partial.append(ap[0])
                 partial.append(ap[1])
-                print("deleting "+str(G.vs[v]['name'] + " " +str(G.vs[adj[0]]['name']))+ " " +str(G.vs[adj[1]]['name']))
-
+                print("deleting "+str(v['name'] + " " +str(G.vs[adj[0]]['name']))+ " " +str(G.vs[adj[1]]['name']))
+                #delete from queue as a solution
+                q.discard(G.vs[adj[0]]['name'])
+                q.discard(G.vs[adj[1]]['name'])
+                q.discard(v['name'])
                 G.delete_vertices([v, G.vs[adj[0]], G.vs[adj[1]]])
 
             #else:
             #for merge 2 scenario
     solution |= set(partial)
     k -= len(partial)
+    print(G)
     return G, k, solution
