@@ -118,7 +118,8 @@ def bin_search_k_vc(g, args):
     for v in g.vs:
         v['original_index'] = v.index
         v['name'] = str(v.index)
-    v_visited = [0]
+    # first element - graph vertices visited, second element - branching nodes visited
+    v_visited = [0, 0]
     # print("assigned name and org index")
     reduced_g, _, partial = apply_preprocessing(Graph.copy(g), g.vcount(), set(), args, v_visited)
     if(args.verbose >= 3):
@@ -284,7 +285,8 @@ if __name__ == "__main__":
         # logging.info("%s took %s to compute", FILENAME, elapsed )
         # logging.info("%s %s", FILENAME, elapsed )
         # logging.info("visited " + str(vertices_visited[0]) + " nodes")
-        logging.info("%s %s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0], len(solution))
+        logging.info("%s %s %s %s %s %s", FILENAME, graph.vcount(), elapsed, vertices_visited[0],
+                     vertices_visited[1], len(solution) )
         if(args.verbose >= 3):
             print("checker check:")
         check_correctness(Graph.copy(graph), list(solution))

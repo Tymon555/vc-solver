@@ -36,8 +36,8 @@ def solve_degree_two(g, v_visited):
 
     return taken
 def branch_and_reduce(g, solution, current_best_solution, k, args, v_visited):
-
-    v_visited[0] += 1
+    v_visited[1] += 1
+    # v_visited[0] += 1
 
     # DEGREE_TWO_SOLVER = True
     DEGREE_TWO_SOLVER = False
