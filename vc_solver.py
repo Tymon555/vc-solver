@@ -135,7 +135,7 @@ def bin_search_k_vc(g, args):
     if(args.verbose >= 3):
         print("starting binary search...")
     if(args.verbose >= 3):
-        print("lower bound: "+ len(lower))
+        print("lower bound: "+ lower)
     while lower <= upper and not found:
         current = int((upper + lower)/2)
         if(args.verbose >= 3):
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename='performance_measure.log', level=logging.DEBUG)
     logging.info("\nthis is log of perf_counter over each instance.")
     # min_k = 1000000
-
+    sys.setrecursionlimit(10000)
     # for command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--optimization", type=int, choices=[0,1,2,3,4,5], help="choose \
@@ -267,6 +267,12 @@ if __name__ == "__main__":
             logging.info("%s %s TIMEOUT", FILENAME, graph.vcount())
             if(args.verbose >= 3):
                 print("timeout")
+            continue
+        except RecursionError as rec:
+            if(rec.args[0] != 'maximum recursion depth exceeded while calling a Python object'):
+                raise
+            logging.info("%s %s RECURSIONERROR", FILENAME, graph.vcount())
+            print(rec.args[0])
             continue
         if type(solution) == int:
             if(args.verbose >= 3):

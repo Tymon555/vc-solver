@@ -245,6 +245,6 @@ def local_reduction(G, k, solution, tbd, v_visited):
             #for merge 2 scenario
     solution |= set(partial)
     k -= len(partial)
-#     if(args.verbose >= 3):
-# print(G)
+    if(not quad_kernel_reduction(G, k)):
+        return G, -2, solution
     return G, k, solution
