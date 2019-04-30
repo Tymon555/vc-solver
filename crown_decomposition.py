@@ -26,7 +26,7 @@ def apply_crown_decomposition(G, k, solution, v_visited):
     G.delete_vertices(crown_head)
     solution |= set(partial)
 
-    # #print(str(partial) + " taken to solution ")
+    print(str(partial) + " taken to solution ")
     #print("crown reduction found partial of size " + str(len(partial)))
     k -= len(partial)
     # #print(k)
@@ -39,7 +39,7 @@ def walk(G, v, last_path, Z, v_visited):
         if(G.vs[n]["hk_matched"] != last_path):
             #take to set Z and follow path
             Z.add(G.vs[n])
-            walk(G, n, not last_path, Z)
+            walk(G, n, not last_path, Z, v_visited)
     return
 
 def get_vc_from_matching(G, M, Vm, I, v_visited):
@@ -54,8 +54,11 @@ def get_vc_from_matching(G, M, Vm, I, v_visited):
     # #print("S: " + str(S))
     return S
 
-def crown_decomposition(G, k, solution, v_visited=[0]):
-
+def crown_decomposition(G, k, solution, v_visited=[0], debug = False):
+    if debug:
+        org = G.copy()
+        plot(org, vertex_label = [v.index for v in org.vs])
+    G = G.copy()
     # requirement for crown reduction
     # if(G.vcount() > 3*k):
     #     #print("g has more than 3k vertices")
@@ -98,15 +101,16 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
             # #print("to bipratite" + str(e.target) + " " + str(e.source))
             to_delete.append(e)
     G.delete_edges(to_delete)
+    org.delete_edges(to_delete)
     v_visited[0] += len(G.vs)
     for v in G.vs:
         if(v in Vm and G.degree(v) == 0):
             Vm.remove(v)
     # #print("found matching of size " + str(matching_size))
     # #print()
-    # #print("I: " + str(I))
-    #print("Vm: " + str(Vm))
-    # #print(G)
+    # print("I: " + str(I))
+    # print("Vm: " + str(Vm))
+    # print(G)
     if(matching_size > k):
         #we are done
         return set(), [-1]
@@ -122,7 +126,6 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
     for v in G.vs:
         v["hk_matched"] = False # those
 
-    #TODO fix that
     augmented_paths = set()
     v_in_aug_paths = set()
     # while True:
@@ -162,6 +165,9 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
             augmented_paths.clear()
     # #print("M: ")
     # #print(str({(G.es[e].source, G.es[e].target) for e in M}))
+    # for e in M:
+    #     G.es[e]['color']='blue'
+    # plot(G)
     vc = get_vc_from_matching(G, M, Vm, I, v_visited)
     # ##print("vs is:")
     # #print (vc)
@@ -170,13 +176,28 @@ def crown_decomposition(G, k, solution, v_visited=[0]):
 
     #taking intersection of vc and Vm
     H = vc & Vm
+    partial = [v["original_index"] for v in H]
+    if debug:
+        k = org.neighborhood(partial)
+        k = [item for sublist in k for item in sublist]
+        print(k)
+        C = set(k) - set(partial)
+        R = set(org.vs)- {org.vs[e] for e in (set(partial)|C)}
+        print(R)
+        for i in C:
+            org.vs[i]['color'] = 'pink'
+        for v in partial:
+            org.vs[v]['color'] = 'blue'
+        for v in R:
+            v['color'] = 'yellow'
+
+        plot(org, vertex_label = [v.index for v in org.vs])
     # ##print("crown decomposition with head:")
     # ##print(H)
     ##print("vc size: "+ str(len(vc)))
     ##print("head size: " + str(len(H)))
     ##print("graph size: "+ str(G.vcount()))
     #translating into original graph's stuff
-    partial = [v["original_index"] for v in H]
     return H, partial
 
 def hk_bfs(G, vs, v_in_aug_paths, v_visited):

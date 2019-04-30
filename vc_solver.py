@@ -182,7 +182,6 @@ def bin_search_k_vc(g, args):
 if __name__ == "__main__":
     # for logging performance of the program
     logging.basicConfig(filename='performance_measure.log', level=logging.DEBUG)
-    logging.info("\nthis is log of perf_counter over each instance.")
     # min_k = 1000000
     sys.setrecursionlimit(10000)
     # for command line arguments
@@ -202,6 +201,9 @@ if __name__ == "__main__":
     #so we dont get tle on drawing modules
     if(args.draw):
         args.timeout = 10000
+    logging.info("\nthis is log of different performance measures for each instance.\
+\nFormat: name of the instance | nr of vertices | time of execution | vertices visited | branching\
+ nodes visited | solution size")
     logging.info(str("optimization level: " + str(args.optimization)))
     if(args.verbose >= 3):
         print("timeout: "+ str(args.timeout))
@@ -229,23 +231,23 @@ if __name__ == "__main__":
     # if(len(sys.argv) > 1):
     #     folder = sys.argv[1]
     folder = args.folder
-    if folder == "generate":
-        graphs = generate_ER_graphs()
-        for i, graph in enumerate(graphs):
-            t = time.perf_counter()
-            # if(graph.vcount() > 10000):
-            #     continue
-            solution, vertices_visited= bin_search_k_vc(graph, args)
-            # solution, vertices_visited = linear_search_k_vc(graph.copy())
-            #measure t elapsed
-            elapsed = time.perf_counter() - t
-            FILENAME = "todo"
-            logging.info("%s took %self to compute", FILENAME, elapsed )
-            logging.info("visited " + str(vertices_visited[0]) + " nodes")
-            if(args.verbose >= 3):
-                print("checker check:")
-            draw_solution(graph, solution)
-            check_correctness(graph, list(solution))
+    # if folder == "generate":
+    #     graphs = generate_ER_graphs()
+    #     for i, graph in enumerate(graphs):
+    #         t = time.perf_counter()
+    #         # if(graph.vcount() > 10000):
+    #         #     continue
+    #         solution, vertices_visited= bin_search_k_vc(graph, args)
+    #         # solution, vertices_visited = linear_search_k_vc(graph.copy())
+    #         #measure t elapsed
+    #         elapsed = time.perf_counter() - t
+    #         FILENAME = "todo"
+    #         logging.info("%s took %self to compute", FILENAME, elapsed )
+    #         logging.info("visited " + str(vertices_visited[0]) + " nodes")
+    #         if(args.verbose >= 3):
+    #             print("checker check:")
+    #         draw_solution(graph, solution)
+    #         check_correctness(graph, list(solution))
 
     files = [file for file in os.listdir(folder) if file.endswith(".gr") or file.endswith(".edge")]
 

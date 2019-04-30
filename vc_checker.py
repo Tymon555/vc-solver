@@ -21,7 +21,10 @@ def check_correctness(g, vc):
 def check_cd_correctness():
     G = vc_io.readgraph("example_graph.gr")
     # g, k, sol = crown_decomposition.apply_crown_decomposition(G, 3, set())
-    head, partial = crown_decomposition.crown_decomposition(G, 3, set())
+    head, partial = crown_decomposition.crown_decomposition(G, 3, set(), [0], True)
+    for e in partial:
+        G.vs.find(e)['color']='blue'
+    plot(G, vertex_label=[v.index for v in G.vs])
     print(head)
     # print(k)
     # print(sol)
